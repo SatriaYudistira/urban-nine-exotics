@@ -1,18 +1,20 @@
-/* Urban Nine Exotics — cool bone paper, deep moss ink, pastel-gene ochre.
-   One family (Archivo); width is the expressive axis: wide for names, narrow for data. */
+/* Urban Nine Exotics — brand colours from the logo: night black, python gold (#C69753), bone white.
+   Dark is the default theme (the logo lives on black); light is one toggle away.
+   Archivo carries the UI; Permanent Marker is only for the brushed "Nine" of the wordmark. */
 
 :root {
-  --bg: #eceee9;
-  --surface: #f7f8f5;
-  --ink: #18201c;
-  --muted: #5b6660;
-  --line: #d2d7d0;
-  --accent: #8c5f12;       /* text-safe ochre */
-  --accent-fill: #c8901f;  /* buttons, marks */
-  --on-accent: #17130a;
-  --sold: #9aa39d;
-  --het: #6f7a73;
-  --shadow: 0 1px 0 rgba(24, 32, 28, .04), 0 12px 32px -18px rgba(24, 32, 28, .25);
+  --bg: #0e0d0c;
+  --surface: #171513;
+  --ink: #eeebe5;
+  --muted: #a39d93;
+  --line: #2b2825;
+  --accent: #d6aa63;       /* text-safe gold on black */
+  --accent-fill: #c69753;  /* logo gold: buttons, marks */
+  --on-accent: #120f0a;
+  --brand-gold: #c69753;  /* wordmark "Nine" */
+  --sold: #5f5a53;
+  --het: #a8a196;
+  --shadow: 0 1px 0 rgba(0,0,0,.3), 0 16px 40px -20px rgba(0,0,0,.7);
   --r-img: 3px;
   --r-ctl: 8px;
   --wrap: clamp(1320px, 92vw, 3440px); /* grows smoothly as the browser is zoomed out */
@@ -20,21 +22,13 @@
   --hero-max: 68px;
   --detail-w: 1120px;
   --gutter: clamp(16px, 4vw, 40px);
-  color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #111613; --surface: #181e1a; --ink: #e5e9e3; --muted: #98a29b; --line: #29312c;
-    --accent: #e3ad45; --accent-fill: #d9a23a; --on-accent: #17130a; --sold: #5d6660; --het: #9aa49d;
-    --shadow: 0 1px 0 rgba(0,0,0,.3), 0 16px 40px -20px rgba(0,0,0,.7);
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #111613; --surface: #181e1a; --ink: #e5e9e3; --muted: #98a29b; --line: #29312c;
-  --accent: #e3ad45; --accent-fill: #d9a23a; --on-accent: #17130a; --sold: #5d6660; --het: #9aa49d;
-  --shadow: 0 1px 0 rgba(0,0,0,.3), 0 16px 40px -20px rgba(0,0,0,.7);
   color-scheme: dark;
+}
+:root[data-theme="light"] {
+  --bg: #f2f0ec; --surface: #fbfaf8; --ink: #141210; --muted: #67615a; --line: #dcd7cf;
+  --accent: #7d5a22; --accent-fill: #c69753; --brand-gold: #9f7230; --on-accent: #120f0a; --sold: #a29b91; --het: #776f65;
+  --shadow: 0 1px 0 rgba(20,18,16,.04), 0 12px 32px -18px rgba(20,18,16,.25);
+  color-scheme: light;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -59,9 +53,17 @@ h1, h2, h3, p { margin: 0; }
 .mono, .num { font-variant-numeric: tabular-nums; font-variation-settings: "wdth" 82; letter-spacing: .01em; }
 
 /* ---------- wordmark ---------- */
-.wordmark { display: inline-flex; align-items: baseline; gap: .38em; text-decoration: none; line-height: 1; white-space: nowrap; }
-.wm-a { font-weight: 820; font-variation-settings: "wdth" 125; font-size: 19px; letter-spacing: -.01em; }
-.wm-b { font-weight: 400; font-variation-settings: "wdth" 70; font-size: 19px; color: var(--muted); }
+/* Mirrors the logo lockup: heavy white URBAN, brushed gold Nine, spaced EXOTICS between rules. */
+.wordmark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; line-height: 1; white-space: nowrap; color: var(--ink); }
+.wm-logo { width: 42px; height: 42px; border-radius: 50%; object-fit: cover; flex: none; box-shadow: 0 0 0 1px var(--line); }
+.wm-text { display: grid; justify-items: center; gap: 3px; }
+.wm-line { display: flex; align-items: baseline; gap: 5px; }
+.wm-urban { font-weight: 900; font-variation-settings: "wdth" 112; font-size: 20px; letter-spacing: .01em; text-transform: uppercase; }
+.wm-nine { font-family: "Permanent Marker", "Archivo", cursive; font-size: 20px; color: var(--brand-gold); text-transform: uppercase; transform: rotate(-4deg) translateY(1px); display: inline-block; }
+.wm-exotics { display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 600; letter-spacing: .42em; margin-right: -.42em; text-transform: uppercase; color: var(--muted); }
+.wm-exotics::before, .wm-exotics::after { content: ""; width: 12px; height: 1px; background: var(--accent-fill); }
+.brand-tagline { font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+.foot-logo { width: 168px; height: 168px; object-fit: contain; margin: -8px 0 14px -10px; }
 
 /* ---------- header ---------- */
 .site-head { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: saturate(1.4) blur(12px); border-bottom: 1px solid var(--line); }
@@ -303,17 +305,17 @@ h1, h2, h3, p { margin: 0; }
 .steps p { color: var(--muted); max-width: 56ch; margin-top: 4px; }
 
 /* ---------- footer ---------- */
-.site-foot { background: var(--ink); color: var(--bg); padding: 56px 0 28px; }
-.site-foot .muted { color: color-mix(in srgb, var(--bg) 62%, var(--ink)); }
+/* Footer stays night-black in both themes so the logo sits on its own background. */
+.site-foot { background: #0b0c0e; color: #eeebe5; padding: 56px 0 28px; border-top: 1px solid #2b2825; }
+.site-foot .muted { color: #a39d93; }
 .foot-grid { display: grid; grid-template-columns: 1fr minmax(0, 520px); gap: 32px; }
-.foot-mark { margin-bottom: 8px; }
-.foot-mark .wm-a { font-size: 24px; } .foot-mark .wm-b { font-size: 24px; color: inherit; opacity: .6; }
+.site-foot .brand-tagline { color: #d6aa63; margin-bottom: 8px; }
 .contacts { list-style: none; margin: 0; padding: 0; }
-.contacts li { display: grid; grid-template-columns: 100px 1fr auto; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid color-mix(in srgb, var(--bg) 18%, var(--ink)); }
+.contacts li { display: grid; grid-template-columns: 100px 1fr auto; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #2b2825; }
 .c-k { opacity: .62; font-size: 14px; }
 .c-v { font-weight: 600; text-decoration: none; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .c-v:hover { text-decoration: underline; }
-.site-foot .icon-btn { color: inherit; border-color: color-mix(in srgb, var(--bg) 24%, var(--ink)); opacity: .8; }
+.site-foot .icon-btn { color: inherit; border-color: #3a3632; opacity: .85; }
 .foot-base { margin-top: 40px; font-size: 13px; }
 
 /* ---------- detail dialog ---------- */
@@ -374,7 +376,8 @@ h1, h2, h3, p { margin: 0; }
   .main-nav a:not([href="#contact"]):not([data-nav="research"]) { display: none; }
   .main-nav a { padding: 8px 8px; font-size: 14px; }
   .head-row { gap: 8px; }
-  .wm-b { display: none; }
+  .wm-logo { width: 36px; height: 36px; }
+  .wm-urban, .wm-nine { font-size: 17px; }
   .storebar-row { grid-template-columns: 1fr 1fr; }
   .grid { grid-template-columns: 1fr 1fr; gap: 22px 12px; }
   .gene-title { font-size: 14.5px; }

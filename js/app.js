@@ -362,7 +362,7 @@ window.UNE = (() => {
     const root = document.documentElement;
     try { const t = localStorage.getItem('une-theme'); if (t) root.dataset.theme = t; } catch {}
     $('[data-theme-toggle]').addEventListener('click', () => {
-      const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+      const dark = root.dataset.theme !== 'light';
       root.dataset.theme = dark ? 'light' : 'dark';
       try { localStorage.setItem('une-theme', root.dataset.theme); } catch {}
     });
