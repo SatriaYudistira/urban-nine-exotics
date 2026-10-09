@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Urban Nine Exotics</title>
+  <meta name="description" content="Ball pythons bred in Jakarta. Available animals, breeder collection and how to buy.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,300..900;1,62..125,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip" href="#catalog">Skip to animals</a>
+
+  <header class="site-head">
+    <div class="wrap head-row">
+      <a class="wordmark" href="#/" aria-label="Urban Nine Exotics, home">
+        <span class="wm-a">Urban Nine</span><span class="wm-b">Exotics</span>
+      </a>
+      <nav class="main-nav" aria-label="Main">
+        <a href="#/available" data-nav="available">Available</a>
+        <a href="#/collection" data-nav="collection">Collection</a>
+        <a href="#/sold" data-nav="sold">Sold</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <button class="icon-btn theme-btn" type="button" aria-label="Switch colour theme" data-theme-toggle>
+        <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="public">
+    <section class="hero wrap" id="hero" aria-label="Featured animal"></section>
+
+    <section class="storebar" aria-label="About the breeder">
+      <div class="wrap storebar-row" id="storebar"></div>
+    </section>
+
+    <section class="catalog wrap" id="catalog" aria-label="Animals">
+      <div class="tabs" role="tablist" aria-label="Animal lists">
+        <button role="tab" data-tab="available">Available <span class="tab-n"></span></button>
+        <button role="tab" data-tab="collection">Collection <span class="tab-n"></span></button>
+        <button role="tab" data-tab="sold">Sold <span class="tab-n"></span></button>
+      </div>
+
+      <form class="filters" id="filters" role="search" onsubmit="return false">
+        <label class="search">
+          <span class="sr">Search by gene or ID</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m16 16 4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input type="search" name="q" placeholder="Search genes, e.g. clown, het pied" autocomplete="off">
+        </label>
+        <div class="seg" role="group" aria-label="Sex">
+          <button type="button" data-sex="all" aria-pressed="true">All</button>
+          <button type="button" data-sex="F" aria-pressed="false">Female</button>
+          <button type="button" data-sex="M" aria-pressed="false">Male</button>
+        </div>
+        <label class="select"><span class="sr">Hatch year</span><select name="year"></select></label>
+        <label class="select"><span class="sr">Sort</span>
+          <select name="sort">
+            <option value="featured">Featured first</option>
+            <option value="newest">Newest hatch</option>
+            <option value="price-asc">Price, low to high</option>
+            <option value="price-desc">Price, high to low</option>
+          </select>
+        </label>
+      </form>
+
+      <p class="result-count" id="result-count" aria-live="polite"></p>
+      <div class="grid" id="grid"></div>
+    </section>
+
+    <section class="about" id="about" aria-labelledby="about-h">
+      <div class="wrap about-grid">
+        <div>
+          <h2 id="about-h">About Urban Nine</h2>
+          <div class="prose" id="about-text"></div>
+        </div>
+        <div>
+          <h2>How to buy</h2>
+          <ol class="steps" id="steps"></ol>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div id="admin-root" hidden></div>
+
+  <footer class="site-foot" id="contact">
+    <div class="wrap foot-grid">
+      <div>
+        <p class="foot-mark"><span class="wm-a">Urban Nine</span> <span class="wm-b">Exotics</span></p>
+        <p class="muted" id="foot-location"></p>
+      </div>
+      <ul class="contacts" id="contacts"></ul>
+    </div>
+    <div class="wrap foot-base muted">
+      <span>© <span id="year"></span> Urban Nine Exotics</span>
+    </div>
+  </footer>
+
+  <dialog class="detail" id="detail" aria-labelledby="detail-title"></dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/genes.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
