@@ -133,7 +133,7 @@ window.UNEPhotos = (() => {
 
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const url = (k, w = 960) => IMG[k].src.replace('{w}', w);
-  const credit = (k) => { const i = IMG[k]; return 'Photo: <a href="' + esc(i.page) + '" target="_blank" rel="noopener">' + esc(i.by) + '</a>, ' + (i.licUrl ? '<a href="' + esc(i.licUrl) + '" target="_blank" rel="noopener">' + esc(i.lic) + '</a>' : esc(i.lic)); };
+  const credit = (k) => { const i = IMG[k]; return (window.UNEi18n ? UNEi18n.t('photo') : 'Photo') + ': <a href="' + esc(i.page) + '" target="_blank" rel="noopener">' + esc(i.by) + '</a>, ' + (i.licUrl ? '<a href="' + esc(i.licUrl) + '" target="_blank" rel="noopener">' + esc(i.lic) + '</a>' : esc(i.lic)); };
   /* <figure> with lazy image, caption and credit. */
   function figure(k, { caption = '', alt = caption, w = 960, cls = 'r-fig', eager = false } = {}) {
     return '<figure class="' + cls + '"><img src="' + esc(url(k, w)) + '" alt="' + esc(alt) + '"' + (eager ? '' : ' loading="lazy"') + ' decoding="async" referrerpolicy="no-referrer"><figcaption>' + (caption ? '<span>' + esc(caption) + '</span> ' : '') + '<span class="credit">' + credit(k) + '</span></figcaption></figure>';

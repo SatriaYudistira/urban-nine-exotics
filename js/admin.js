@@ -207,7 +207,9 @@ window.UNEAdmin = (() => {
           <label class="field w2"><span>Weight (g)</span><input name="weight" type="number" inputmode="numeric" min="0" value="${esc(a.weight)}"></label>
           <label class="field"><span>Price (${esc(data.settings.currency || 'IDR')})</span><input name="price" type="number" inputmode="numeric" min="0" step="1000" value="${esc(a.price)}"><small>Leave empty to show “Ask for price”.</small></label>
           <label class="field"><span>Feeding</span><input name="feeding" value="${esc(a.feeding)}" placeholder="Eating frozen-thawed rat pinks"></label>
+          <label class="field"><span>Feeding <small>(Bahasa, optional)</small></span><input name="feedingId" value="${esc(a.feedingId || '')}" placeholder="Makan tikus pinky (frozen-thawed)"></label>
           <label class="field w6"><span>Notes</span><textarea name="notes" placeholder="Pairing, pattern details, anything a buyer should know">${esc(a.notes)}</textarea></label>
+          <label class="field w6"><span>Notes <small>(Bahasa, optional)</small></span><textarea name="notesId" placeholder="Shown when the visitor picks Bahasa. Left empty, the English notes are shown.">${esc(a.notesId || '')}</textarea></label>
           <label class="check"><input type="checkbox" name="featured"${a.featured ? ' checked' : ''}> Featured (pinned to the top and shown in the hero)</label>
           <label class="check"><input type="checkbox" name="proven"${a.proven ? ' checked' : ''}> Proven breeder (has produced a clutch)</label>
           <div class="field w6"><span>Photos <small>(up to 4, first is the cover; resized automatically)</small></span></div>
@@ -324,7 +326,7 @@ window.UNEAdmin = (() => {
     const a = {
       id, name: v.name.trim(), genes: v.genes.trim(), sex: v.sex, year,
       weight: parseInt(v.weight, 10) || 0, price: parseInt(v.price, 10) || 0,
-      ...st, featured: !!v.featured, feeding: v.feeding.trim(), notes: v.notes.trim(),
+      ...st, featured: !!v.featured, feeding: v.feeding.trim(), notes: v.notes.trim(), feedingId: v.feedingId.trim(), notesId: v.notesId.trim(),
       hatchDate: v.hatchDate || '', proven: !!v.proven,
       photos: draftPhotos, added: prev?.added || new Date().toISOString().slice(0, 10)
     };
@@ -360,6 +362,7 @@ window.UNEAdmin = (() => {
         <label class="field w2"><span>Season</span><input name="season" type="number" inputmode="numeric" value="${new Date().getFullYear()}"></label>
         <label class="field w2"><span>Status</span><select name="status">${PAIR_STATUS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></label>
         <label class="field w6"><span>Note <small>(optional)</small></span><textarea name="note" rows="2" placeholder="What you expect from this clutch"></textarea></label>
+        <label class="field w6"><span>Note <small>(Bahasa, optional)</small></span><textarea name="noteId" rows="2" placeholder="Apa yang diharapkan dari clutch ini"></textarea></label>
         <p class="field w6 err" role="alert" id="pair-err"></p>
         <div class="field w6"><div class="admin-actions"><button class="btn btn-primary" type="submit">Add pairing</button></div></div>
       </form>`;
@@ -374,6 +377,7 @@ window.UNEAdmin = (() => {
     return `
       <form id="settings-form" class="sheet-body" style="padding:8px 0 0;max-width:820px">
         ${f('tagline', 'Headline', { w: 'w6', hint: 'The big line at the top of the site.' })}
+        ${f('taglineId', 'Headline <small>(Bahasa, optional)</small>', { w: 'w6', hint: 'Shown when the visitor picks Bahasa. Left empty, the English text is shown.' })}
         ${f('location', 'Location', { w: 'w2' })}
         ${f('established', 'Breeding since', { w: 'w2', attrs: 'type="number" inputmode="numeric"' })}
         <label class="field w2"><span>Currency</span><select name="currency">${['IDR', 'USD', 'SGD', 'MYR', 'EUR'].map(c => `<option${c === s.currency ? ' selected' : ''}>${c}</option>`).join('')}</select></label>
@@ -381,9 +385,13 @@ window.UNEAdmin = (() => {
         ${f('instagram', 'Instagram handle', { w: 'w2' })}
         ${f('email', 'Email', { w: 'w2', attrs: 'type="email"' })}
         ${f('about', 'About text', { area: true, rows: 6, hint: 'Leave a blank line between paragraphs.' })}
+        ${f('aboutId', 'About text <small>(Bahasa, optional)</small>', { area: true, rows: 6 })}
         ${f('termsDeposit', 'Reserving and deposit', { area: true })}
+        ${f('termsDepositId', 'Reserving and deposit <small>(Bahasa, optional)</small>', { area: true })}
         ${f('termsShipping', 'Shipping and pickup', { area: true })}
+        ${f('termsShippingId', 'Shipping and pickup <small>(Bahasa, optional)</small>', { area: true })}
         ${f('termsGuarantee', 'Guarantee', { area: true })}
+        ${f('termsGuaranteeId', 'Guarantee <small>(Bahasa, optional)</small>', { area: true })}
         <div class="field w6"><div class="admin-actions"><button class="btn btn-primary" type="submit">Save settings</button></div></div>
       </form>
       <form id="pw-form" class="sheet-body" style="padding:32px 0 0;max-width:820px;border-top:1px solid var(--line);margin-top:32px" novalidate>
@@ -459,7 +467,7 @@ window.UNEAdmin = (() => {
       const v = Object.fromEntries(new FormData(e.target));
       if (!v.female || !v.male) { $('#pair-err').textContent = 'Pick a female and a male. Mark animals as Breeder or Holdback to list them here.'; return; }
       data.pairings = data.pairings || [];
-      data.pairings.push({ id: 'P' + Date.now().toString(36), season: parseInt(v.season, 10) || new Date().getFullYear(), female: v.female, male: v.male, status: v.status, note: v.note.trim() });
+      data.pairings.push({ id: 'P' + Date.now().toString(36), season: parseInt(v.season, 10) || new Date().getFullYear(), female: v.female, male: v.male, status: v.status, note: v.note.trim(), noteId: v.noteId.trim() });
       commit('Pairing added');
       return;
     }

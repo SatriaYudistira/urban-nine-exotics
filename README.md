@@ -24,6 +24,8 @@ Open http://localhost:5500. Admin: http://localhost:5500/#admin
 | `js/genes.js` | Gene parsing (`66% het Pied`, `pos het …`) and placeholder pattern art |
 | `js/app.js` | Public site |
 | `js/photos.js` | Stock photos (Wikimedia Commons) with their credits and licences |
+| `js/i18n.js` | English / Bahasa Indonesia wording for the whole public site |
+| `js/research-id.js` | Bahasa version of the Research page |
 | `js/research.js` | Research page: care and breeding guide, prey calculator, hunger-strike checker |
 | `js/admin.js` | Owner panel |
 
@@ -57,3 +59,10 @@ The Research page and About section use freely licensed photos from Wikimedia Co
 photographer and licence under the image, which the licences require; keep those credits.
 They illustrate care topics and morphs only; never use them as photos of animals for sale.
 Replace the About photo with your own when you have one (`js/photos.js`, key `about`).
+
+## Languages
+
+The ID / EN switch in the header changes all public wording. Visitors with an Indonesian browser
+see Bahasa first; the choice is remembered. Your own texts (headline, About, buying terms, animal
+feeding and notes, pairing notes) have a "(Bahasa, optional)" field in the admin; if it is empty
+the English text is shown. Gene and morph names are never translated.

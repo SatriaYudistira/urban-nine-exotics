@@ -17,6 +17,36 @@ window.UNEResearch = (() => {
     ['morphs', 'Common morphs']
   ];
   const F = (...a) => window.UNEPhotos ? UNEPhotos.figure(...a) : '';
+  /* Bahasa version lives in research-id.js; null means English. */
+  const ID = () => (window.UNEi18n?.lang === 'id' && window.UNEResearchID) || null;
+  const sections = () => (ID() || { SECTIONS }).SECTIONS;
+  const tocHtml = (label) => `<nav class="r-toc" aria-label="${label}">
+          <p class="r-toc-h">${label}</p>
+          <ol>${sections().map(([id, t]) => `<li><a href="#/research/${id}" data-sec="${id}">${t}</a></li>`).join('')}</ol>
+        </nav>`;
+  const morphList = (list) => `<ul class="morphs">
+    ${list.map(([k, name, type, text]) => `<li class="morph">${F(k, { alt: name + ' ball python', w: 500, cls: 'morph-fig' })}<div class="morph-txt"><p class="morph-name">${name} <span class="morph-type">${type}</span></p><p>${text}</p></div></li>`).join('')}
+  </ul>`;
+
+  /* English tool messages (Bahasa twins in research-id.js) */
+  const M_EN = {
+    toc: 'On this page',
+    preyEmpty: 'Enter a weight to see the right prey size and schedule.',
+    preyResult: (stage, lo, hi, fits, every) => `<b>${stage}.</b> Offer prey of about <b>${lo}–${hi} g</b>${fits.length ? ` (${fits.join(' or ').toLowerCase()})` : ''}, <b>every ${every}</b>.`,
+    flags: ['See a reptile vet', "One or more red-flag signs means this is likely more than a normal fast. Don't wait for the weight to drop."],
+    fastEmpty: 'Enter both weights and the weeks since its last meal.',
+    young: {
+      vet: (l, wk) => ['Needs attention now', `Young snakes have little reserve. ${l}% weight loss after ${wk} weeks is too much: check temperatures and hides today, and contact a vet or your breeder this week.`],
+      watch: (l) => ['Watch closely', `${l}% loss so far. Go through the checklist above, offer every 7 days, and weigh again in a week.`],
+      ok: (l) => ['Normal so far', `${l}% loss. Keep offering every 7 days and weigh every two weeks.`]
+    },
+    adult: {
+      vet: (l) => ['See a reptile vet', `${l}% weight loss is more than a healthy fast. Book a vet check even if the snake looks fine.`],
+      watch: (l, wk) => ['Watch closely', `${l}% loss after ${wk} weeks. Re-check temperatures and enclosure size, offer every 10–14 days, and weigh every 2 weeks. Over 15% means a vet visit.`],
+      ok: (l, wk) => ['Normal fast', `${l}% loss after ${wk} weeks is fine for an adult${wk >= 26 ? ', even though it has been a long time' : ''}. Keep offering every 2–3 weeks and weighing once a month. Seasonal and breeding fasts are common.`]
+    }
+  };
+  const M = () => ID()?.m || M_EN;
 
   /* Morph primer: [photo key, name, inheritance, what it does] */
   const MORPHS = [
@@ -43,7 +73,7 @@ window.UNEResearch = (() => {
     return { name: 'Adult', pct: [5, 8], every: '14–21 days' };
   }
 
-  const html = () => `
+  const htmlEn = () => `
     <article class="research wrap">
       <header class="r-head">
         <p class="muted">Research</p>
@@ -54,10 +84,7 @@ window.UNEResearch = (() => {
       ${F('cover', { alt: 'Close-up of a ball python head', w: 1280, cls: 'r-cover', eager: true })}
 
       <div class="r-layout">
-        <nav class="r-toc" aria-label="On this page">
-          <p class="r-toc-h">On this page</p>
-          <ol>${SECTIONS.map(([id, t]) => `<li><a href="#/research/${id}" data-sec="${id}">${t}</a></li>`).join('')}</ol>
-        </nav>
+        ${tocHtml(M_EN.toc)}
 
         <div class="r-body">
 
@@ -269,9 +296,7 @@ window.UNEResearch = (() => {
 <section id="r-morphs">
   <h2>Common morphs</h2>
   <p>A morph is a genetic mutation that changes colour or pattern. How it is inherited decides what a pairing produces: <b>recessive</b> genes only show when a snake has two copies (one copy makes it a "het"), while <b>incomplete dominant</b> genes show with one copy and make a "super" form with two.</p>
-  <ul class="morphs">
-    ${MORPHS.map(([k, name, type, text]) => `<li class="morph">${F(k, { alt: name + ' ball python', w: 500, cls: 'morph-fig' })}<div class="morph-txt"><p class="morph-name">${name} <span class="morph-type">${type}</span></p><p>${text}</p></div></li>`).join('')}
-  </ul>
+  ${morphList(MORPHS)}
   <p class="muted small">These photos show example animals from other keepers, not Urban Nine stock. Each is credited under its photo.</p>
 </section>
 
@@ -282,16 +307,18 @@ window.UNEResearch = (() => {
         </div>
       </div>
     </article>`;
+  const html = () => ID() ? ID().html({ F, toc: tocHtml(ID().m.toc), morphList }) : htmlEn();
 
   /* ---------- tools ---------- */
   function preyTool() {
     const f = $('#prey-tool'), out = $('#prey-out');
     f.w.addEventListener('input', () => {
       const w = parseFloat(f.w.value);
-      if (!(w >= 30 && w <= 5000)) { out.innerHTML = 'Enter a weight to see the right prey size and schedule.'; return; }
+      if (!(w >= 30 && w <= 5000)) { out.innerHTML = M().preyEmpty; return; }
       const s = stage(w), lo = Math.round(w * s.pct[0] / 100), hi = Math.round(w * s.pct[1] / 100);
-      const fits = PREY.filter(([, a, b]) => b >= lo && a <= hi).map(p => p[0]);
-      out.innerHTML = `<b>${s.name}.</b> Offer prey of about <b>${lo}–${hi} g</b>${fits.length ? ` (${esc(fits.join(' or ').toLowerCase())})` : ''}, <b>every ${s.every}</b>.`;
+      const names = ID()?.PREY_NAMES;
+      const fits = PREY.map((p, i) => [names ? names[i] : p[0], p[1], p[2]]).filter(([, a, b]) => b >= lo && a <= hi).map(p => esc(p[0]));
+      out.innerHTML = M().preyResult(s.name, lo, hi, fits, s.every);
     });
   }
 
@@ -300,21 +327,14 @@ window.UNEResearch = (() => {
     const run = () => {
       const w0 = parseFloat(f.w0.value), w1 = parseFloat(f.w1.value), wk = parseFloat(f.wk.value);
       const flags = [...f.querySelectorAll('[name=f]')].filter(c => c.checked).length;
-      if (flags) return show('vet', 'See a reptile vet', 'One or more red-flag signs means this is likely more than a normal fast. Don\'t wait for the weight to drop.');
-      if (!(w0 > 0 && w1 > 0) || isNaN(wk)) return show('', '', 'Enter both weights and the weeks since its last meal.');
+      const m = M();
+      if (flags) return show('vet', ...m.flags);
+      if (!(w0 > 0 && w1 > 0) || isNaN(wk)) return show('', '', m.fastEmpty);
       const loss = (w0 - w1) / w0 * 100, l = Math.max(0, Math.round(loss * 10) / 10);
       const young = w0 < 700;
-      let level, title, text;
-      if (young) {
-        if (loss >= 10 || wk >= 6) { level = 'vet'; title = 'Needs attention now'; text = `Young snakes have little reserve. ${l}% weight loss after ${wk} weeks is too much: check temperatures and hides today, and contact a vet or your breeder this week.`; }
-        else if (loss >= 5 || wk >= 3) { level = 'watch'; title = 'Watch closely'; text = `${l}% loss so far. Go through the checklist above, offer every 7 days, and weigh again in a week.`; }
-        else { level = 'ok'; title = 'Normal so far'; text = `${l}% loss. Keep offering every 7 days and weigh every two weeks.`; }
-      } else {
-        if (loss >= 15) { level = 'vet'; title = 'See a reptile vet'; text = `${l}% weight loss is more than a healthy fast. Book a vet check even if the snake looks fine.`; }
-        else if (loss >= 10) { level = 'watch'; title = 'Watch closely'; text = `${l}% loss after ${wk} weeks. Re-check temperatures and enclosure size, offer every 10–14 days, and weigh every 2 weeks. Over 15% means a vet visit.`; }
-        else { level = 'ok'; title = 'Normal fast'; text = `${l}% loss after ${wk} weeks is fine for an adult${wk >= 26 ? ', even though it has been a long time' : ''}. Keep offering every 2–3 weeks and weighing once a month. Seasonal and breeding fasts are common.`; }
-      }
-      show(level, title, text);
+      const level = young ? (loss >= 10 || wk >= 6 ? 'vet' : loss >= 5 || wk >= 3 ? 'watch' : 'ok')
+                          : (loss >= 15 ? 'vet' : loss >= 10 ? 'watch' : 'ok');
+      show(level, ...(young ? m.young : m.adult)[level](l, wk));
     };
     const show = (level, title, text) => {
       out.className = 'r-out' + (level ? ` r-out-${level}` : '');
@@ -323,11 +343,12 @@ window.UNEResearch = (() => {
     f.addEventListener('input', run);
   }
 
-  let built = false;
+  let builtLang = null;
   function build(root, whatsapp) {
-    if (!built) { root.innerHTML = html(); preyTool(); fastTool(); built = true; }
+    const lang = window.UNEi18n?.lang || 'en';
+    if (builtLang !== lang) { root.innerHTML = html(); preyTool(); fastTool(); builtLang = lang; }
     const wa = String(whatsapp || '').replace(/\D/g, '');
-    $('#r-wa').href = wa ? `https://wa.me/${wa}?text=${encodeURIComponent('Hi Urban Nine, I have a question about my ball python.')}` : '#contact';
+    $('#r-wa').href = wa ? `https://wa.me/${wa}?text=${encodeURIComponent(UNEi18n.t('wa.general'))}` : '#contact';
   }
 
   /* Highlight the section in view in the table of contents. */
@@ -341,7 +362,7 @@ window.UNEResearch = (() => {
         document.querySelectorAll('.r-toc a').forEach(a => a.toggleAttribute('aria-current', a.dataset.sec === id));
       });
     }, { rootMargin: '-30% 0px -60% 0px' });
-    SECTIONS.forEach(([id]) => { const s = document.getElementById('r-' + id); if (s) io.observe(s); });
+    sections().forEach(([id]) => { const s = document.getElementById('r-' + id); if (s) io.observe(s); });
   }
 
   return { build, watch, sections: SECTIONS };
