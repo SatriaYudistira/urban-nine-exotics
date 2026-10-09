@@ -2,7 +2,8 @@
 
 Static, dependency-free site for a ball python breeder: catalogue (Available / Collection / Sold)
 with gene filters and counts, a breeding-season (pairings) section, similar-animal suggestions,
-gene-aware search and filters, shareable animal pages, About + How to buy, and an owner admin.
+gene-aware search and filters, shareable animal pages, a Research care guide (#/research),
+About + How to buy, and an owner admin.
 
 ## Run it
 
@@ -22,6 +23,8 @@ Open http://localhost:5500. Admin: http://localhost:5500/#admin
 | `js/store.js` | Storage layer (draft in browser, export/import) |
 | `js/genes.js` | Gene parsing (`66% het Pied`, `pos het …`) and placeholder pattern art |
 | `js/app.js` | Public site |
+| `js/photos.js` | Stock photos (Wikimedia Commons) with their credits and licences |
+| `js/research.js` | Research page: care and breeding guide, prey calculator, hunger-strike checker |
 | `js/admin.js` | Owner panel |
 
 ## Publishing changes (Phase 1)
@@ -46,3 +49,11 @@ Forgot it? Delete the `"adminAuth"` entry from `js/data.js`, then reopen `#admin
 
 In **#admin → Site settings**: WhatsApp number, Instagram, email, "Breeding since" year.
 The 12 sample animals are examples — edit or delete them and add real photos.
+
+## Photos
+
+The Research page and About section use freely licensed photos from Wikimedia Commons
+(CC0, public domain, CC BY and CC BY-SA). They are loaded from Wikimedia and each one shows its
+photographer and licence under the image, which the licences require; keep those credits.
+They illustrate care topics and morphs only; never use them as photos of animals for sale.
+Replace the About photo with your own when you have one (`js/photos.js`, key `about`).

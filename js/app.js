@@ -5,6 +5,7 @@ window.UNE = (() => {
   const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const G = window.UNEGenes;
 
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   let data = UNEStore.load({ draft: true });
   const state = { tab: 'available', sex: 'all', year: 'all', q: '', sort: 'featured', genes: [] };
 
@@ -239,6 +240,7 @@ window.UNE = (() => {
       <button class="icon-btn copy" type="button" data-copy="${esc(v)}" aria-label="Copy ${k}">
         <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><rect x="8" y="8" width="12" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>
       </button></li>`).join('');
+    $('#about-fig').innerHTML = window.UNEPhotos ? UNEPhotos.figure('about', { alt: 'A piebald ball python', cls: 'r-fig about-fig' }) : '';
     $('#foot-location').textContent = `${s.location}. Shipping across Indonesia.`;
     $('#year').textContent = new Date().getFullYear();
   }
@@ -257,6 +259,23 @@ window.UNE = (() => {
     document.body.classList.toggle('admin-mode', isAdmin);
     $('#public').hidden = isAdmin; $('#admin-root').hidden = !isAdmin;
     if (isAdmin) { closeDetail(); window.UNEAdmin?.open(); return; }
+    const r = h.match(/^\/research(?:\/([\w-]+))?$/);
+    $('#research-root').hidden = !r; $('#public').hidden = !!r;
+    if (r) {
+      closeDetail();
+      $$('[data-nav]').forEach(l => l.toggleAttribute('aria-current', l.dataset.nav === 'research'));
+      if (!window.UNEResearch) return;
+      UNEResearch.build($('#research-root'), data.settings.whatsapp);
+      document.title = 'Ball python care and breeding | Urban Nine Exotics';
+      const target = r[1] && document.getElementById('r-' + r[1]);
+      // after layout (and the browser's own scroll restore) settles
+      requestAnimationFrame(() => setTimeout(() => target ? target.scrollIntoView() : window.scrollTo(0, 0), 0));
+      UNEResearch.watch();
+      return;
+    }
+    $$('[data-nav]').forEach(l => l.toggleAttribute('aria-current', l.dataset.nav === state.tab));
+    // In-page anchors (#about, #projects, #contact) clicked from another view
+    if (/^[a-z]+$/.test(h)) { document.title = 'Urban Nine Exotics'; document.getElementById(h)?.scrollIntoView(); }
     const m = h.match(/^\/animal\/(.+)$/);
     if (m) {
       const a = data.animals.find(x => x.id === m[1]);
