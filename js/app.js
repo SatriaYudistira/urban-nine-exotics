@@ -372,5 +372,7 @@ window.UNE = (() => {
   function refresh(next) { if (next) data = next; renderAll(); }
 
   bind(); renderAll(); route();
+  // The owner's draft loads from IndexedDB a moment later; re-render with it if there is one.
+  UNEStore.ready.then(() => { if (UNEStore.hasDraft()) { data = UNEStore.load({ draft: true }); renderAll(); if (!document.body.classList.contains('admin-mode')) route(); } });
   return { refresh, toast, money, esc, cover, tabOf, get data() { return data; } };
 })();

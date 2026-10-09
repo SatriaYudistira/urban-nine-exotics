@@ -22,7 +22,7 @@ window.UNEAdmin = (() => {
   const statusKey = (a) => a.listing === 'for-sale' ? a.status : a.listing;
 
   function commit(msg) {
-    if (!UNEStore.save(data)) { UNE.toast('Browser storage is full. Remove some photos, then try again.'); return; }
+    UNEStore.save(data).then(ok => { if (!ok) UNE.toast('Couldn\'t save in this browser. Export site data now so nothing is lost.'); });
     UNE.refresh(JSON.parse(JSON.stringify(data)));
     render();
     if (msg) UNE.toast(msg);
@@ -91,7 +91,8 @@ window.UNEAdmin = (() => {
   }
 
   /* ---------- shell ---------- */
-  function open() {
+  async function open() {
+    await UNEStore.ready;
     data = UNEStore.load({ draft: true });
     unlocked() ? render() : renderGate();
     window.scrollTo(0, 0);
@@ -244,13 +245,67 @@ window.UNEAdmin = (() => {
     });
   }
 
-  /* Resize to max 1200px and re-encode as JPEG (~100–200 KB). */
-  async function compress(file, max = 1200, quality = 0.8) {
+  /* Turn an upload into a square photo that fills the card frame.
+     Studio shots on a plain background are trimmed to the snake and re-centred with even
+     padding (nothing cut off); other photos are centre-cropped to a square.
+     Output: up to 1600 px, downscaled in halving steps for sharpness, WebP 0.9 (JPEG fallback). */
+  const OUT = 1600, PAD = 0.07;
+  async function compress(file) {
     const bmp = await createImageBitmap(file, { imageOrientation: 'from-image' });
-    const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
-    const c = Object.assign(document.createElement('canvas'), { width: Math.round(bmp.width * k), height: Math.round(bmp.height * k) });
-    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
-    return c.toDataURL('image/jpeg', quality);
+    const W = bmp.width, H = bmp.height;
+    const box = subjectBox(bmp);
+    let sx, sy, side, fill = null;
+    if (box) {
+      const bw = box.x1 - box.x0, bh = box.y1 - box.y0;
+      side = Math.round(Math.max(bw, bh) * (1 + PAD * 2));
+      sx = Math.round((box.x0 + box.x1) / 2 - side / 2);
+      sy = Math.round((box.y0 + box.y1) / 2 - side / 2);
+      fill = box.bg;
+    } else {
+      side = Math.min(W, H); sx = Math.round((W - side) / 2); sy = Math.round((H - side) / 2);
+    }
+    // Draw the square crop at source resolution (padding area painted with the background colour)
+    let c = Object.assign(document.createElement('canvas'), { width: side, height: side });
+    let g = c.getContext('2d');
+    if (fill) { g.fillStyle = fill; g.fillRect(0, 0, side, side); }
+    g.drawImage(bmp, -sx, -sy);
+    // Downscale in halving steps, then one final high-quality step
+    const target = Math.min(OUT, side);
+    while (c.width / 2 >= target) c = scaleTo(c, Math.round(c.width / 2));
+    if (c.width !== target) c = scaleTo(c, target);
+    const webp = c.toDataURL('image/webp', 0.9);
+    return webp.startsWith('data:image/webp') ? webp : c.toDataURL('image/jpeg', 0.92);
+  }
+  function scaleTo(src, size) {
+    const c = Object.assign(document.createElement('canvas'), { width: size, height: size });
+    const g = c.getContext('2d'); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = 'high';
+    g.drawImage(src, 0, 0, size, size);
+    return c;
+  }
+  /* If the corners share one plain colour, return the bounding box of everything that differs from it. */
+  function subjectBox(bmp) {
+    const S = 240, k = S / Math.max(bmp.width, bmp.height);
+    const w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k));
+    const c = Object.assign(document.createElement('canvas'), { width: w, height: h });
+    const g = c.getContext('2d', { willReadFrequently: true }); g.drawImage(bmp, 0, 0, w, h);
+    const px = g.getImageData(0, 0, w, h).data;
+    const at = (x, y) => { const i = (y * w + x) * 4; return [px[i], px[i + 1], px[i + 2]]; };
+    const d2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+    const corners = [];
+    for (const [cx, cy] of [[0, 0], [w - 6, 0], [0, h - 6], [w - 6, h - 6]])
+      for (let y = cy; y < cy + 6; y++) for (let x = cx; x < cx + 6; x++) corners.push(at(Math.max(0, x), Math.max(0, y)));
+    const bg = [0, 1, 2].map(i => corners.reduce((s, p) => s + p[i], 0) / corners.length);
+    if (corners.some(p => d2(p, bg) > 30 ** 2)) return null; // busy background: not a studio shot
+    let x0 = w, y0 = h, x1 = -1, y1 = -1;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++)
+      if (d2(at(x, y), bg) > 42 ** 2) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    if (x1 < 0 || (x1 - x0) * (y1 - y0) < w * h * 0.02) return null; // nothing found, or only specks
+    const inv = 1 / k;
+    return {
+      x0: Math.max(0, Math.floor(x0 * inv)), y0: Math.max(0, Math.floor(y0 * inv)),
+      x1: Math.min(bmp.width, Math.ceil((x1 + 1) * inv)), y1: Math.min(bmp.height, Math.ceil((y1 + 1) * inv)),
+      bg: `rgb(${bg.map(Math.round).join(',')})`
+    };
   }
 
   function saveForm(form, oldId) {
