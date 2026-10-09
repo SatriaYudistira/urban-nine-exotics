@@ -124,9 +124,10 @@ window.UNEAdmin = (() => {
         </div>
         <div class="admin-tabs" role="tablist">
           <button role="tab" type="button" aria-selected="${view === 'animals'}" data-view="animals">Animals (${data.animals.length})</button>
+          <button role="tab" type="button" aria-selected="${view === 'pairings'}" data-view="pairings">Breeding season (${(data.pairings || []).length})</button>
           <button role="tab" type="button" aria-selected="${view === 'settings'}" data-view="settings">Site settings</button>
         </div>
-        ${view === 'animals' ? animalsView() : settingsView()}
+        ${view === 'animals' ? animalsView() : view === 'pairings' ? pairingsView() : settingsView()}
       </section>
       <dialog class="sheet" id="sheet"></dialog>
       <input type="file" id="import-file" accept=".js,.json" hidden>`;
@@ -201,11 +202,13 @@ window.UNEAdmin = (() => {
           <label class="field w2"><span>Sex</span><select name="sex">
             <option value="F"${a.sex === 'F' ? ' selected' : ''}>Female</option><option value="M"${a.sex === 'M' ? ' selected' : ''}>Male</option><option value="U"${a.sex === 'U' ? ' selected' : ''}>Unsexed</option></select></label>
           <label class="field w2"><span>Hatch year</span><input name="year" type="number" inputmode="numeric" min="2000" max="2100" value="${esc(a.year)}"><small class="err" data-err="year"></small></label>
+          <label class="field w2"><span>Hatch date <small>(optional)</small></span><input name="hatchDate" type="date" value="${esc(a.hatchDate || '')}"></label>
           <label class="field w2"><span>Weight (g)</span><input name="weight" type="number" inputmode="numeric" min="0" value="${esc(a.weight)}"></label>
           <label class="field"><span>Price (${esc(data.settings.currency || 'IDR')})</span><input name="price" type="number" inputmode="numeric" min="0" step="1000" value="${esc(a.price)}"><small>Leave empty to show “Ask for price”.</small></label>
           <label class="field"><span>Feeding</span><input name="feeding" value="${esc(a.feeding)}" placeholder="Eating frozen-thawed rat pinks"></label>
           <label class="field w6"><span>Notes</span><textarea name="notes" placeholder="Pairing, pattern details, anything a buyer should know">${esc(a.notes)}</textarea></label>
           <label class="check"><input type="checkbox" name="featured"${a.featured ? ' checked' : ''}> Featured (pinned to the top and shown in the hero)</label>
+          <label class="check"><input type="checkbox" name="proven"${a.proven ? ' checked' : ''}> Proven breeder (has produced a clutch)</label>
           <div class="field w6"><span>Photos <small>(up to 4, first is the cover; resized automatically)</small></span></div>
           <div class="photos" id="photos"></div>
         </div>
@@ -257,6 +260,7 @@ window.UNEAdmin = (() => {
     let bad = false;
     if (!id) { $('[data-err=id]', form).textContent = 'Enter an ID code, e.g. UNE-25-007.'; bad = true; }
     else if (id !== oldId && data.animals.some(a => a.id === id)) { $('[data-err=id]', form).textContent = `${id} is already used by another animal.`; bad = true; }
+    if (v.hatchDate) v.year = v.hatchDate.slice(0, 4);
     const year = parseInt(v.year, 10);
     if (!(year >= 2000 && year <= 2100)) { $('[data-err=year]', form).textContent = 'Enter a 4-digit hatch year.'; bad = true; }
     if (bad) return;
@@ -266,11 +270,44 @@ window.UNEAdmin = (() => {
       id, name: v.name.trim(), genes: v.genes.trim(), sex: v.sex, year,
       weight: parseInt(v.weight, 10) || 0, price: parseInt(v.price, 10) || 0,
       ...st, featured: !!v.featured, feeding: v.feeding.trim(), notes: v.notes.trim(),
+      hatchDate: v.hatchDate || '', proven: !!v.proven,
       photos: draftPhotos, added: prev?.added || new Date().toISOString().slice(0, 10)
     };
     if (prev) data.animals[data.animals.indexOf(prev)] = a; else data.animals.unshift(a);
     $('#sheet').close();
     commit(prev ? `Saved ${id}` : `Added ${id}`);
+  }
+
+  /* ---------- breeding season (pairings) ---------- */
+  const PAIR_STATUS = [['planned', 'Planned'], ['paired', 'Paired'], ['ovulated', 'Ovulated'], ['gravid', 'Gravid'], ['laid', 'Eggs laid'], ['hatched', 'Hatched']];
+  function pairingsView() {
+    const kept = data.animals.filter(a => a.listing !== 'for-sale');
+    const opt = (sex, sel) => kept.filter(a => a.sex === sex).map(a => `<option value="${esc(a.id)}"${a.id === sel ? ' selected' : ''}>${esc(a.name ? a.name + ' · ' : '')}${esc(a.genes)} (${esc(a.id)})</option>`).join('');
+    const list = (data.pairings || []).slice().sort((x, y) => y.season - x.season);
+    const name = (id) => { const a = data.animals.find(x => x.id === id); return a ? esc((a.name ? a.name + ', ' : '') + a.genes) : `<span class="err">${esc(id)} was deleted</span>`; };
+    return `
+      <p class="muted" style="margin-bottom:14px">Pairings show on the site under "Breeding season". Only breeders and holdbacks can be picked.</p>
+      <div class="rows">
+        ${list.map(p => `
+          <div class="row row-pair">
+            <span class="mono">${esc(p.season)}</span>
+            <div><p class="gene-title">${name(p.female)} × ${name(p.male)}</p>${p.note ? `<p class="row-sub">${esc(p.note)}</p>` : ''}</div>
+            <label><span class="sr">Status</span><select data-act="pair-status" data-id="${esc(p.id)}">${PAIR_STATUS.map(([v, l]) => `<option value="${v}"${v === p.status ? ' selected' : ''}>${l}</option>`).join('')}</select></label>
+            <div class="row-ctl">${confirming === p.id
+              ? `<span class="confirm">Delete this pairing? <button class="btn btn-danger btn-sm" type="button" data-act="pair-del-yes" data-id="${esc(p.id)}">Delete</button><button class="btn btn-ghost btn-sm" type="button" data-act="cancel">Keep</button></span>`
+              : `<button class="btn btn-ghost btn-sm" type="button" data-act="pair-del" data-id="${esc(p.id)}">Delete</button>`}</div>
+          </div>`).join('') || '<p class="muted" style="padding:20px 0">No pairings yet.</p>'}
+      </div>
+      <form id="pair-form" class="sheet-body" style="padding:24px 0 0;max-width:820px" novalidate>
+        <div class="field w6"><span style="font-size:17px">Add a pairing</span></div>
+        <label class="field"><span>Female</span><select name="female" required>${opt('F')}</select></label>
+        <label class="field"><span>Male</span><select name="male" required>${opt('M')}</select></label>
+        <label class="field w2"><span>Season</span><input name="season" type="number" inputmode="numeric" value="${new Date().getFullYear()}"></label>
+        <label class="field w2"><span>Status</span><select name="status">${PAIR_STATUS.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></label>
+        <label class="field w6"><span>Note <small>(optional)</small></span><textarea name="note" rows="2" placeholder="What you expect from this clutch"></textarea></label>
+        <p class="field w6 err" role="alert" id="pair-err"></p>
+        <div class="field w6"><div class="admin-actions"><button class="btn btn-primary" type="submit">Add pairing</button></div></div>
+      </form>`;
   }
 
   /* ---------- settings ---------- */
@@ -331,6 +368,8 @@ window.UNEAdmin = (() => {
       case 'del': confirming = id; render(); break;
       case 'del-yes': data.animals = data.animals.filter(x => x.id !== id); confirming = null; commit(`Deleted ${id}`); break;
       case 'cancel': confirming = null; render(); break;
+      case 'pair-del': confirming = id; render(); break;
+      case 'pair-del-yes': data.pairings = data.pairings.filter(p => p.id !== id); confirming = null; commit('Pairing deleted'); break;
       case 'discard': confirming = '__draft'; render(); break;
       case 'discard-yes': UNEStore.discardDraft(); confirming = null; data = UNEStore.load(); UNE.refresh(UNEStore.load()); render(); UNE.toast('Changes discarded'); break;
       case 'export': { const n = UNEStore.exportFile(data); UNE.toast(`Exported data.js (${(n / 1048576).toFixed(1)} MB)`); break; }
@@ -346,6 +385,10 @@ window.UNEAdmin = (() => {
       const st = STATUS.find(s => s[0] === e.target.value);
       Object.assign(a, st[2]); commit(`${a.id} is now ${st[1].toLowerCase()}`);
     }
+    if (e.target.matches('select[data-act=pair-status]')) {
+      const p = data.pairings.find(x => x.id === e.target.dataset.id);
+      p.status = e.target.value; commit('Pairing updated');
+    }
     if (e.target.id === 'import-file' && e.target.files[0]) importFile(e.target.files[0]);
   });
   root.addEventListener('input', (e) => {
@@ -356,6 +399,15 @@ window.UNEAdmin = (() => {
   });
   root.addEventListener('submit', async (e) => {
     if (e.target.id === 'gate-form') { e.preventDefault(); submitGate(e.target); return; }
+    if (e.target.id === 'pair-form') {
+      e.preventDefault();
+      const v = Object.fromEntries(new FormData(e.target));
+      if (!v.female || !v.male) { $('#pair-err').textContent = 'Pick a female and a male. Mark animals as Breeder or Holdback to list them here.'; return; }
+      data.pairings = data.pairings || [];
+      data.pairings.push({ id: 'P' + Date.now().toString(36), season: parseInt(v.season, 10) || new Date().getFullYear(), female: v.female, male: v.male, status: v.status, note: v.note.trim() });
+      commit('Pairing added');
+      return;
+    }
     if (e.target.id === 'pw-form') {
       e.preventDefault();
       const f = e.target, err = $('#pw-err'), a = data.settings.adminAuth;

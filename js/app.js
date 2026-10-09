@@ -6,13 +6,22 @@ window.UNE = (() => {
   const G = window.UNEGenes;
 
   let data = UNEStore.load({ draft: true });
-  const state = { tab: 'available', sex: 'all', year: 'all', q: '', sort: 'featured' };
+  const state = { tab: 'available', sex: 'all', year: 'all', q: '', sort: 'featured', genes: [] };
 
   /* ---------- helpers ---------- */
   function money(n) {
     const cur = data.settings.currency || 'IDR';
     try { return new Intl.NumberFormat(cur === 'IDR' ? 'id-ID' : 'en-US', { style: 'currency', currency: cur, maximumFractionDigits: 0 }).format(n); }
     catch { return `${cur} ${Number(n).toLocaleString()}`; }
+  }
+  /* Gene facets, MorphMarket / RCD style: visual genes plus "Het X" as separate traits. */
+  const geneKeys = (a) => G.parse(a.genes).filter(g => !/^normal$/i.test(g.gene)).map(g => g.kind === 'het' ? 'Het ' + g.gene : g.gene);
+  const DAY = 864e5;
+  const isNew = (a) => a.listing === 'for-sale' && a.status === 'available' && a.added && (Date.now() - new Date(a.added)) / DAY <= 21;
+  function hatched(a, long) {
+    if (!a.hatchDate) return String(a.year);
+    const d = new Date(a.hatchDate + 'T00:00:00');
+    return isNaN(d) ? String(a.year) : d.toLocaleDateString('en-GB', long ? { day: 'numeric', month: 'short', year: 'numeric' } : { month: 'short', year: 'numeric' });
   }
   const sexWord = (s) => s === 'F' ? 'Female' : s === 'M' ? 'Male' : 'Unsexed';
   const sexGlyph = (s) => s === 'F' ? '♀' : s === 'M' ? '♂' : '?';
@@ -57,7 +66,7 @@ window.UNE = (() => {
         <div class="hero-card">
           <p class="hero-flag">${a.featured ? 'Featured' : 'Latest'}</p>
           ${geneTitle(a, 'p', 'gene-title gene-title-lg')}
-          <p class="meta"><span class="sex">${sexGlyph(a.sex)}</span> ${sexWord(a.sex)}, ${esc(a.year)}<span class="sep"></span>${esc(a.weight)} g<span class="sep"></span><span class="mono">${esc(a.id)}</span></p>
+          <p class="meta"><span class="sex">${sexGlyph(a.sex)}</span> ${sexWord(a.sex)}, ${esc(hatched(a))}<span class="sep"></span>${esc(a.weight)} g<span class="sep"></span><span class="mono">${esc(a.id)}</span></p>
           ${priceLine(a)}
         </div>
       </a>` : ''}`;
@@ -73,9 +82,10 @@ window.UNE = (() => {
   }
 
   /* ---------- catalogue ---------- */
-  function filtered() {
+  function filtered({ ignoreGenes = false } = {}) {
     const q = state.q.trim().toLowerCase();
     let list = data.animals.filter(a => tabOf(a) === state.tab);
+    if (!ignoreGenes && state.genes.length) list = list.filter(a => { const k = geneKeys(a).map(x => x.toLowerCase()); return state.genes.every(g => k.includes(g.toLowerCase())); });
     if (state.sex !== 'all') list = list.filter(a => a.sex === state.sex);
     if (state.year !== 'all') list = list.filter(a => String(a.year) === state.year);
     if (q) {
@@ -97,18 +107,32 @@ window.UNE = (() => {
       <a class="card${a.status === 'sold' ? ' is-sold' : ''}" href="#/animal/${encodeURIComponent(a.id)}">
         <div class="card-media">
           <img src="${esc(cover(a))}" alt="${esc(a.genes)}" loading="lazy" decoding="async">
-          <div class="card-tags">${a.featured && a.status !== 'sold' ? '<span class="pill pill-feat">Featured</span>' : ''}${statusPill(a)}</div>
+          <div class="card-tags">${a.featured && a.status !== 'sold' ? '<span class="pill pill-feat">Featured</span>' : ''}${isNew(a) ? '<span class="pill pill-new">New</span>' : ''}${statusPill(a)}${a.proven ? '<span class="pill">Proven</span>' : ''}</div>
           ${n > 1 ? `<span class="photo-count" aria-label="${n} photos"><svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true"><rect x="3" y="6" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>${n}</span>` : ''}
         </div>
         <div class="card-body">
           ${geneTitle(a)}
-          <p class="meta"><span class="sex" title="${sexWord(a.sex)}">${sexGlyph(a.sex)}</span>${esc(a.year)}<span class="sep"></span>${esc(a.weight)} g${a.name ? `<span class="sep"></span>${esc(a.name)}` : ''}</p>
+          <p class="meta"><span class="sex" title="${sexWord(a.sex)}">${sexGlyph(a.sex)}</span>${esc(hatched(a))}<span class="sep"></span>${esc(a.weight)} g${a.name ? `<span class="sep"></span>${esc(a.name)}` : ''}</p>
           <div class="card-foot">${priceLine(a)}<span class="mono id">${esc(a.id)}</span></div>
         </div>
       </a>`;
   }
 
+  function renderFacets() {
+    const counts = new Map();
+    filtered({ ignoreGenes: true }).forEach(a => new Set(geneKeys(a)).forEach(k => {
+      const id = k.toLowerCase(); const c = counts.get(id) || { label: k, n: 0 }; c.n++; counts.set(id, c);
+    }));
+    state.genes.forEach(g => { if (!counts.has(g.toLowerCase())) counts.set(g.toLowerCase(), { label: g, n: 0 }); });
+    const items = [...counts.values()].sort((x, y) => (/^Het /.test(x.label) - /^Het /.test(y.label)) || (y.n - x.n) || x.label.localeCompare(y.label));
+    $('#facets').innerHTML = items.length < 2 ? '' : items.map(c => {
+      const on = state.genes.some(g => g.toLowerCase() === c.label.toLowerCase());
+      return `<button type="button" class="facet${/^Het /.test(c.label) ? ' facet-het' : ''}" aria-pressed="${on}" data-gene="${esc(c.label)}">${esc(c.label)} <span>${c.n}</span></button>`;
+    }).join('') + (state.genes.length ? '<button type="button" class="facet-clear" data-reset>Clear</button>' : '');
+  }
+
   function renderCatalog() {
+    renderFacets();
     const list = filtered();
     $('#grid').innerHTML = list.map(card).join('') || `
       <div class="empty">
@@ -163,23 +187,34 @@ window.UNE = (() => {
           </ul>
           <dl class="facts">
             <div><dt>Sex</dt><dd>${sexWord(a.sex)}</dd></div>
-            <div><dt>Hatched</dt><dd>${esc(a.year)}</dd></div>
+            <div><dt>Hatched</dt><dd>${esc(hatched(a, true))}</dd></div>
+            ${a.listing !== 'for-sale' ? `<div><dt>Breeding</dt><dd>${a.proven ? 'Proven breeder' : a.listing === 'holdback' ? 'Holdback, not yet bred' : 'Not yet proven'}</dd></div>` : ''}
             <div><dt>Weight</dt><dd>${esc(a.weight)} g</dd></div>
             <div><dt>Feeding</dt><dd>${esc(a.feeding || '—')}</dd></div>
+            <div><dt>Origin</dt><dd>Captive bred by Urban Nine</dd></div>
           </dl>
           ${a.notes ? `<p class="notes">${esc(a.notes)}</p>` : ''}
           <div class="detail-actions">
             ${forSale && a.status !== 'hold'
               ? `<a class="btn btn-primary btn-wide" href="${waLink(msg)}" target="_blank" rel="noopener">Ask about ${esc(a.id)} on WhatsApp</a>`
               : `<a class="btn btn-ghost btn-wide" href="${waLink(`Hi Urban Nine, I saw ${a.id} on your site. Will you have anything similar?`)}" target="_blank" rel="noopener">Ask about similar animals</a>`}
-            <button class="btn btn-ghost" type="button" data-copy="${esc(a.id)}">Copy ID</button>
+            <button class="btn btn-ghost" type="button" data-copy="${esc(location.href)}" data-copy-label="link to ${esc(a.id)}">Copy link</button>
           </div>
           <p class="muted small">Prefer Instagram or email? <a href="#contact" data-close>See all contacts</a>.</p>
         </div>
-      </div>`;
+      </div>
+      ${(() => { const r = related(a); return r.length ? `<section class="related"><h3>Similar animals available</h3><div class="grid related-grid">${r.map(card).join('')}</div></section>` : ''; })()}`;
     if (!dlg.open) dlg.showModal();
     dlg.scrollTop = 0;
     document.title = `${a.id} ${s.visualText} | Urban Nine Exotics`;
+  }
+  function related(a) {
+    const base = (k) => k.replace(/^Het /, '').replace(/s*(.*)/, '').toLowerCase();
+    const mine = new Set(geneKeys(a).map(base));
+    return data.animals
+      .filter(x => x.id !== a.id && tabOf(x) === 'available' && x.status === 'available')
+      .map(x => ({ x, score: new Set(geneKeys(x).map(base).filter(k => mine.has(k))).size }))
+      .filter(r => r.score > 0).sort((p, q) => q.score - p.score).slice(0, 4).map(r => r.x);
   }
   function closeDetail() {
     const dlg = $('#detail');
@@ -225,15 +260,36 @@ window.UNE = (() => {
     const m = h.match(/^\/animal\/(.+)$/);
     if (m) {
       const a = data.animals.find(x => x.id === m[1]);
-      if (a && state.tab !== tabOf(a)) { state.tab = tabOf(a); renderCatalog(); }
+      if (a && state.tab !== tabOf(a)) { state.tab = tabOf(a); state.genes = []; renderCatalog(); }
       openDetail(m[1]); return;
     }
     closeDetail();
     const t = h.match(/^\/(available|collection|sold)$/);
-    if (t && t[1] !== state.tab) { state.tab = t[1]; renderCatalog(); }
+    if (t && t[1] !== state.tab) { state.tab = t[1]; state.genes = []; renderCatalog(); }
   }
 
-  function renderAll() { renderHero(); renderYears(); renderCatalog(); renderAbout(); }
+  /* ---------- breeding projects ---------- */
+  const PAIR_STATUS = { planned: 'Planned', paired: 'Paired', ovulated: 'Ovulated', gravid: 'Gravid', laid: 'Eggs laid', hatched: 'Hatched' };
+  function renderProjects() {
+    const list = (data.pairings || []).filter(p => data.animals.some(a => a.id === p.female) && data.animals.some(a => a.id === p.male));
+    $('#projects').hidden = !list.length;
+    if (!list.length) return;
+    const seasons = [...new Set(list.map(p => p.season))].sort((a, b) => b - a);
+    $('#projects-h').textContent = `${seasons[0]} breeding season`;
+    const parent = (id) => {
+      const a = data.animals.find(x => x.id === id);
+      return `<a class="parent" href="#/animal/${encodeURIComponent(a.id)}"><img src="${esc(cover(a))}" alt="" loading="lazy"><span class="parent-sex">${sexGlyph(a.sex)}</span>
+        <span class="parent-txt">${geneTitle(a, 'span')}${a.name ? `<span class="muted small">${esc(a.name)}</span>` : ''}</span></a>`;
+    };
+    $('#pairings').innerHTML = list.filter(p => p.season === seasons[0]).map(p => `
+      <li class="pairing">
+        <div class="pair-head"><span class="pill pill-${p.status}">${PAIR_STATUS[p.status] || p.status}</span></div>
+        <div class="pair-parents">${parent(p.female)}<span class="pair-x" aria-label="paired with">×</span>${parent(p.male)}</div>
+        ${p.note ? `<p class="pair-note">${esc(p.note)}</p>` : ''}
+      </li>`).join('');
+  }
+
+  function renderAll() { renderHero(); renderYears(); renderCatalog(); renderProjects(); renderAbout(); }
 
   /* ---------- events ---------- */
   function bind() {
@@ -253,12 +309,17 @@ window.UNE = (() => {
     document.addEventListener('click', async (e) => {
       const copy = e.target.closest('[data-copy]');
       if (copy) {
-        try { await navigator.clipboard.writeText(copy.dataset.copy); toast(`Copied ${copy.dataset.copy}`); }
+        try { await navigator.clipboard.writeText(copy.dataset.copy); toast(`Copied ${copy.dataset.copyLabel || copy.dataset.copy}`); }
         catch { toast('Copy is blocked here. Select the text instead.'); }
         return;
       }
       if (e.target.closest('[data-reset]')) {
-        Object.assign(state, { sex: 'all', year: 'all', q: '' }); f.q.value = ''; f.year.value = 'all'; renderCatalog(); return;
+        Object.assign(state, { sex: 'all', year: 'all', q: '', genes: [] }); f.q.value = ''; f.year.value = 'all'; renderCatalog(); return;
+      }
+      const fb = e.target.closest('[data-gene]');
+      if (fb) {
+        const g = fb.dataset.gene, i = state.genes.findIndex(x => x.toLowerCase() === g.toLowerCase());
+        i >= 0 ? state.genes.splice(i, 1) : state.genes.push(g); renderCatalog(); return;
       }
       const thumb = e.target.closest('[data-photo]');
       if (thumb) {

@@ -1,6 +1,7 @@
 # Urban Nine Exotics — website
 
-Static, dependency-free site for a ball python breeder: catalogue (Available / Collection / Sold),
+Static, dependency-free site for a ball python breeder: catalogue (Available / Collection / Sold)
+with gene filters and counts, a breeding-season (pairings) section, similar-animal suggestions,
 gene-aware search and filters, shareable animal pages, About + How to buy, and an owner admin.
 
 ## Run it
