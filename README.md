@@ -27,6 +27,7 @@ Open http://localhost:5500. Admin: http://localhost:5500/#admin
 | `js/i18n.js` | English / Bahasa Indonesia wording for the whole public site |
 | `js/research-id.js` | Bahasa version of the Research page |
 | `js/research.js` | Research page: care and breeding guide, prey calculator, hunger-strike checker |
+| `js/animation.js` | Animation page (#/animation): 3D ball python with selectable morph genes and sizes |
 | `js/admin.js` | Owner panel |
 
 ## Publishing changes (Phase 1)
@@ -66,3 +67,17 @@ The ID / EN switch in the header changes all public wording. Visitors with an In
 see Bahasa first; the choice is remembered. Your own texts (headline, About, buying terms, animal
 feeding and notes, pairing notes) have a "(Bahasa, optional)" field in the admin; if it is empty
 the English text is shown. Gene and morph names are never translated.
+
+## Animation page
+
+`#/animation` shows an animated 3D ball python. Visitors pick genes (22 common MorphMarket genes:
+recessive, incomplete dominant with a Super option, and dominant) or a popular combo, and see the
+snake as a hatchling, juvenile or adult, or all three side by side against a ruler. Combos are
+shareable: the genes are kept in the link, e.g. `#/animation/banana+clown+pied` or
+`#/animation/super-pastel+clown`.
+
+- The snake and its skin are generated in code (no 3D model files). It is an illustration of
+  typical animals, not a photo, and the page says so.
+- Three.js 0.169 is loaded from jsDelivr only when the page is opened, so other pages stay light.
+  Without WebGL the flat skin pattern still works.
+- Gene looks, combo names and size ranges live at the top of `js/animation.js`.

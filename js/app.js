@@ -260,7 +260,17 @@ window.UNE = (() => {
     const isAdmin = h === 'admin' || h.startsWith('admin/');
     document.body.classList.toggle('admin-mode', isAdmin);
     $('#public').hidden = isAdmin; $('#admin-root').hidden = !isAdmin;
-    if (isAdmin) { closeDetail(); window.UNEAdmin?.open(); return; }
+    if (isAdmin) { closeDetail(); window.UNEAnim?.stop(); $('#animation-root').hidden = true; window.UNEAdmin?.open(); return; }
+    const an = h.match(/^\/animation(?:\/([\w+-]*))?$/), wasAnim = !$('#animation-root').hidden;
+    $('#animation-root').hidden = !an;
+    if (an) {
+      closeDetail(); $('#research-root').hidden = true; $('#public').hidden = true;
+      $$('[data-nav]').forEach(l => l.toggleAttribute('aria-current', l.dataset.nav === 'animation'));
+      document.title = `${t('title.animation')} | Urban Nine Exotics`;
+      if (window.UNEAnim) { UNEAnim.build($('#animation-root'), data.settings.whatsapp, an[1] || ''); if (!wasAnim) window.scrollTo(0, 0); }
+      return;
+    }
+    window.UNEAnim?.stop();
     const r = h.match(/^\/research(?:\/([\w-]+))?$/);
     $('#research-root').hidden = !r; $('#public').hidden = !!r;
     if (r) {
@@ -331,7 +341,7 @@ window.UNE = (() => {
     $$('.lang-switch [data-lang]').forEach(b => b.addEventListener('click', () => I.set(b.dataset.lang)));
     I.onChange(() => {
       renderAll();
-      if (!$('#research-root').hidden || !$('#detail').open) route(); // rebuild research / titles in the new language
+      if (!$('#research-root').hidden || !$('#animation-root').hidden || !$('#detail').open) route(); // rebuild research / titles in the new language
       if ($('#detail').open) { const m = location.hash.match(/^#\/animal\/(.+)$/); if (m) openDetail(decodeURIComponent(m[1])); }
     });
 
