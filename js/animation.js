@@ -55,18 +55,18 @@ window.UNEAnim = (() => {
 
   /* Typical sizes (sources: Animal Diversity Web; breeder size charts). Model length is mid-range. */
   const STAGES = {
-    baby: { len: 0.36, girth: 27, head: 1.3, en: ['Hatchling', '0–6 months', '25–43 cm', '50–100 g'], id: ['Bayi', '0–6 bulan', '25–43 cm', '50–100 g'] },
-    juv: { len: 0.75, girth: 25, head: 1.12, en: ['Juvenile', '6–18 months', '60–90 cm', '300–700 g'], id: ['Remaja', '6–18 bulan', '60–90 cm', '300–700 g'] },
-    adult: { len: 1.2, girth: 22, head: 1, en: ['Adult', '3+ years', 'Males 90–105 cm, females 105–140 cm', 'Males 1.2–1.8 kg, females 1.8–3 kg'], id: ['Dewasa', '3+ tahun', 'Jantan 90–105 cm, betina 105–140 cm', 'Jantan 1,2–1,8 kg, betina 1,8–3 kg'] }
+    baby: { len: 0.36, girth: 34, head: 1.3, en: ['Hatchling', '0–6 months', '25–43 cm', '50–100 g'], id: ['Bayi', '0–6 bulan', '25–43 cm', '50–100 g'] },
+    juv: { len: 0.75, girth: 31, head: 1.12, en: ['Juvenile', '6–18 months', '60–90 cm', '300–700 g'], id: ['Remaja', '6–18 bulan', '60–90 cm', '300–700 g'] },
+    adult: { len: 1.2, girth: 28, head: 1, en: ['Adult', '3+ years', 'Males 90–105 cm, females 105–140 cm', 'Males 1.2–1.8 kg, females 1.8–3 kg'], id: ['Dewasa', '3+ tahun', 'Jantan 90–105 cm, betina 105–140 cm', 'Jantan 1,2–1,8 kg, betina 1,8–3 kg'] }
   };
   const ORDER = ['baby', 'juv', 'adult'];
 
   const TXT = {
     en: {
-      h: 'Morph animation', lede: 'Pick genes and see what the combination looks like as a hatchling, juvenile and adult. Drag the snake to turn it.',
-      stage: 'Age', compare: 'Compare sizes', pose: 'Pose', slither: 'Slither', coil: 'Coiled',
+      h: 'Morph animation', lede: 'Pick genes and see what the combination looks like as a hatchling, juvenile and adult. Let it move, rest, or ball up the way ball pythons do when they feel shy. Drag to turn the view.',
+      stage: 'Age', compare: 'Compare sizes', pose: 'Behaviour', move: 'Move', stay: 'Stay', ball: 'Ball up',
       play: 'Pause', resume: 'Play', reroll: 'Another individual', rerollTip: 'Same genes, a different snake: patterns and Pied white vary between animals',
-      zoomIn: 'Zoom in', zoomOut: 'Zoom out',
+      zoomIn: 'Zoom in', zoomOut: 'Zoom out', headcam: 'Head close-up',
       presets: 'Popular combos', genes: 'Genes', clear: 'Clear',
       rec: 'Recessive', recTip: 'Needs two copies to show. One copy (het) looks normal.',
       inc: 'Incomplete dominant', incTip: 'One copy shows. Tap again for the Super (two copies).',
@@ -83,10 +83,10 @@ window.UNEAnim = (() => {
       canvas: 'Animated 3D ball python', sizeAll: 'Same individual at three ages, to scale'
     },
     id: {
-      h: 'Animasi morph', lede: 'Pilih gen dan lihat tampilan kombinasinya saat bayi, remaja, dan dewasa. Geser ularnya untuk memutar.',
-      stage: 'Umur', compare: 'Bandingkan ukuran', pose: 'Pose', slither: 'Merayap', coil: 'Melingkar',
+      h: 'Animasi morph', lede: 'Pilih gen dan lihat tampilan kombinasinya saat bayi, remaja, dan dewasa. Biarkan bergerak, diam, atau menggulung seperti ball python saat malu. Geser untuk memutar tampilan.',
+      stage: 'Umur', compare: 'Bandingkan ukuran', pose: 'Gerakan', move: 'Bergerak', stay: 'Diam', ball: 'Menggulung',
       play: 'Jeda', resume: 'Putar', reroll: 'Individu lain', rerollTip: 'Gen sama, ular berbeda: motif dan putih Pied berbeda tiap ekor',
-      zoomIn: 'Perbesar', zoomOut: 'Perkecil',
+      zoomIn: 'Perbesar', zoomOut: 'Perkecil', headcam: 'Lihat kepala',
       presets: 'Kombinasi populer', genes: 'Gen', clear: 'Hapus',
       rec: 'Resesif', recTip: 'Perlu dua salinan agar terlihat. Satu salinan (het) tampak normal.',
       inc: 'Ko-dominan (incomplete dominant)', incTip: 'Satu salinan sudah terlihat. Ketuk lagi untuk Super (dua salinan).',
@@ -107,7 +107,7 @@ window.UNEAnim = (() => {
 
   /* ---------- state ---------- */
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const S = { genes: {}, stage: 'adult', compare: false, pose: 'slither', playing: !reduceMotion, seed: 7 };
+  const S = { genes: {}, stage: 'adult', compare: false, pose: 'move', playing: !reduceMotion, seed: 7 };
 
   function fromHash(arg) {
     const g = {};
@@ -129,7 +129,7 @@ window.UNEAnim = (() => {
   function phenotype(g, stage) {
     const n = (id) => g[id] || 0;
     const age = { baby: 0, juv: .5, adult: 1 }[stage];
-    const P = { dark: [34, 23, 15], blotch: [150, 104, 54], key: [24, 16, 11], belly: [234, 226, 208], head: [44, 31, 21], eye: [26, 19, 14], tongue: [40, 30, 32] };
+    const P = { dark: [34, 25, 20], blotch: [118, 88, 58], key: [30, 21, 16], belly: [236, 229, 212], head: [42, 30, 23], eye: [52, 40, 32], tongue: [40, 30, 32], rim: null };
     const T = { reduce: 0, connect: 0, keyhole: 1, blush: 0, sideClean: 0, bellyDots: .5, bellyDark: 0, web: 0, pin: 0, clown: 0, leopard: 0, spot: 0, freckle: 0, solid: 0, solidCol: null, stripe: 0, stripeCol: null, leu: null, pied: n('pied') ? 1 : 0, faceDots: 0 };
 
     const bel = n('mojave') + n('lesser'), bpc = n('cinnamon') + n('blackpastel');
@@ -180,6 +180,7 @@ window.UNEAnim = (() => {
       if (T.solidCol) T.solidCol = mix(T.solidCol, [238, 196, 120], .8);
       T.freckle *= .15; T.bellyDark = 0;
     }
+    P.rim = T.leu ? P.blotch : mix(P.blotch, n('albino') ? [255, 246, 214] : n('axanthic') ? [226, 226, 230] : [232, 192, 116], .45);
     T.keyhole = Math.max(0, T.keyhole); T.reduce = Math.min(1, T.reduce); T.blush = Math.min(1, T.blush); T.sideClean = Math.min(1, T.sideClean); T.bellyDots = Math.max(0, T.bellyDots);
 
     // Whole-body overrides
@@ -217,7 +218,7 @@ window.UNEAnim = (() => {
   }
 
   /* ---------- skin painter: u (x) runs snout → tail, v (y) runs around the body, back at the middle ---------- */
-  const W = 2048, H = 320, MID = H / 2;
+  const W = 2048, H = 320, MID = H / 2, SC = 2; // skin is drawn in W x H units at SC x resolution
   function blob(x, cx, cy, rx, ry, r, jag = .3, n = 9) {
     const p = [];
     for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, k = 1 - jag / 2 + r() * jag; p.push([cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k]); }
@@ -233,9 +234,10 @@ window.UNEAnim = (() => {
   }
 
   function paint(ph, seed, hs, target) {
-    const c = target || document.createElement('canvas'); c.width = W; c.height = H;
+    const c = target || document.createElement('canvas'); c.width = W * SC; c.height = H * SC;
     const x = c.getContext('2d', { willReadFrequently: true }), r = rng(seed * 7919 + 13), { P, T } = ph;
-    const HEAD = Math.round(W * .05 * hs), body0 = HEAD - 6, sp = W * .056;
+    x.setTransform(SC, 0, 0, SC, 0, 0);
+    const HEAD = Math.round(W * .055 * hs), body0 = HEAD - 6, sp = W * .056;
     const light = mix(P.blotch, P.belly, .35);
 
     x.fillStyle = css(P.dark); x.fillRect(0, 0, W, H);
@@ -267,8 +269,9 @@ window.UNEAnim = (() => {
           for (const side of [-1, 1]) {
             const bx = cx + (side > 0 ? sp * .5 : 0) + (r() - .5) * sp * .3, by = MID + side * H * (.2 + r() * .03);
             const rx = sp * .4 * grow * (.8 + r() * .35), ry = H * .15 * (1 + .25 * T.reduce) * (.85 + r() * .3);
-            x.fillStyle = css(P.blotch); blob(x, bx, by, rx, ry, r, .5, 11);
-            if (r() < .5) blob(x, bx + (r() - .5) * rx, by + side * ry * .7, rx * .45, ry * .45, r, .5, 8);
+            const st = r(), ox = (r() - .5) * rx, extra = r() < .5;
+            const shape = (k, pad) => { const rr = rng(Math.floor(st * 1e9)); blob(x, bx, by, rx + pad, ry + pad, rr, .5, 11); if (extra) blob(x, bx + ox, by + side * ry * .7, rx * .45 + pad, ry * .45 + pad, rr, .5, 8); };
+            x.fillStyle = css(P.rim); shape(0, 2.6); x.fillStyle = css(P.blotch); shape(0, 0);
             if (T.keyhole > .05) {
               x.fillStyle = css(P.key, Math.min(1, T.keyhole));
               const k = Math.min(1.2, T.keyhole) * (1 - .5 * T.reduce);
@@ -277,7 +280,7 @@ window.UNEAnim = (() => {
             }
           }
           const dx = cx + sp * .25 + (r() - .5) * sp * .2;
-          x.fillStyle = css(P.blotch); blob(x, dx, MID + (r() - .5) * 14, sp * .24 * grow, H * .07 * grow, r, .5, 9);
+          { const st = r(), dy = (r() - .5) * 14; x.fillStyle = css(P.rim); blob(x, dx, MID + dy, sp * .24 * grow + 2.6, H * .07 * grow + 2.6, rng(Math.floor(st * 1e9)), .5, 9); x.fillStyle = css(P.blotch); blob(x, dx, MID + dy, sp * .24 * grow, H * .07 * grow, rng(Math.floor(st * 1e9)), .5, 9); }
           if (T.connect > .1 || r() < .3) { x.fillStyle = css(P.blotch, Math.min(1, .6 + T.connect)); blob(x, dx + (r() - .5) * sp * .2, MID + (r() < .5 ? -1 : 1) * H * .1, sp * .1, H * .08, r, .4, 7); }
         }
         // lower flank speckle and belly-edge blotching
@@ -337,30 +340,54 @@ window.UNEAnim = (() => {
 
     // head: x 0..HEAD. Eyes sit at about MID ± 0.2H.
     if (!T.leu) {
-      x.save(); x.beginPath(); x.rect(0, 0, HEAD + 4, H); x.clip();
-      const top = T.clown ? P.blotch : P.head;
-      x.fillStyle = css(top); x.fillRect(0, MID - H * .27, HEAD + 4, H * .54);
+      // painted on its own layer, then faded into the neck so there is no hard edge where the body pattern starts
+      const HW = HEAD * 1.35, hcv = document.createElement('canvas'); hcv.width = Math.ceil(HW * SC); hcv.height = H * SC;
+      const body = x;
+      {
+      const x = hcv.getContext('2d'); x.setTransform(SC, 0, 0, SC, 0, 0);
+      const top = T.clown ? P.blotch : P.head, eyeX = HEAD * .35;
+      x.fillStyle = css(top); x.fillRect(0, MID - H * .27, HW, H * .54);
       if (T.clown) {
         x.fillStyle = css(P.dark);
-        x.beginPath(); x.moveTo(HEAD * .15, MID); x.quadraticCurveTo(HEAD * .55, MID - H * .1, HEAD + 4, MID - H * .05); x.lineTo(HEAD + 4, MID + H * .05); x.quadraticCurveTo(HEAD * .55, MID + H * .1, HEAD * .15, MID); x.fill();
-        for (const side of [-1, 1]) { x.beginPath(); x.ellipse(HEAD * .48, MID + side * H * .2, HEAD * .2, H * .06, 0, 0, 7); x.fill(); }
+        x.beginPath(); x.moveTo(HEAD * .15, MID); x.quadraticCurveTo(HEAD * .55, MID - H * .1, HW, MID - H * .05); x.lineTo(HW, MID + H * .05); x.quadraticCurveTo(HEAD * .55, MID + H * .1, HEAD * .15, MID); x.fill();
+        for (const side of [-1, 1]) { x.beginPath(); x.moveTo(HEAD * .05, MID + side * H * .19); x.quadraticCurveTo(eyeX, MID + side * H * .16, HEAD * .62, MID + side * H * .24); x.lineTo(HEAD * .55, MID + side * H * .26); x.quadraticCurveTo(eyeX, MID + side * H * .22, HEAD * .05, MID + side * H * .215); x.fill(); }
       } else {
-        const stripe = mix(P.blotch, P.belly, .1);
+        // light stripe from above the eye back along the side of the head, dark band through the eye to the jaw angle
+        const stripe = mix(P.rim || P.blotch, P.belly, .15), band = mix(P.head, P.key, .5);
         for (const side of [-1, 1]) {
-          x.fillStyle = css(stripe); x.fillRect(HEAD * .08, MID + side * H * .155 - 4, HEAD, 8);
-          x.fillStyle = css(mix(P.head, P.key, .6)); x.fillRect(HEAD * .3, MID + side * H * .205 - 6, HEAD, 12);
+          x.fillStyle = css(band); x.beginPath(); x.moveTo(HEAD * .12, MID + side * H * .175); x.lineTo(HW, MID + side * H * .2); x.lineTo(HW, MID + side * H * .275); x.lineTo(HEAD * .12, MID + side * H * .245); x.fill();
+          x.fillStyle = css(stripe); x.beginPath(); x.moveTo(eyeX + HEAD * .05, MID + side * H * .15); x.quadraticCurveTo(HEAD * .75, MID + side * H * .14, HW, MID + side * H * .175); x.lineTo(HW, MID + side * H * .205); x.quadraticCurveTo(HEAD * .75, MID + side * H * .19, eyeX + HEAD * .05, MID + side * H * .185); x.fill();
+          x.fillStyle = css(stripe, .85); blob(x, HEAD * .2, MID + side * H * .16, HEAD * .06, H * .02, r, .3, 7);
         }
-        if (!T.web && !T.pin && !T.solid) { x.fillStyle = css(P.blotch, .8); blob(x, HEAD * .82, MID, HEAD * .14, H * .05, r); }
+        if (!T.web && !T.pin && !T.solid) { x.fillStyle = css(P.rim || P.blotch, .7); blob(x, HEAD * .85, MID, HEAD * .1, H * .045, r); }
       }
-      x.fillStyle = css(P.belly); x.fillRect(0, 0, HEAD + 4, MID - H * .26); x.fillRect(0, MID + H * .26, HEAD + 4, H);
+      x.fillStyle = css(P.belly); x.fillRect(0, 0, HW, MID - H * .26); x.fillRect(0, MID + H * .26, HW, H);
       if (T.faceDots) { x.fillStyle = css(P.key, .8); for (let i = 0; i < 14; i++) { x.beginPath(); x.arc(r() * HEAD * .7, MID + (r() - .5) * H * .4, 2.5 + r() * 2, 0, 7); x.fill(); } }
-      if (T.solid) { x.fillStyle = css(T.solidCol, T.solid * .85); x.fillRect(0, MID - H * .27, HEAD + 4, H * .54); }
+      if (T.solid) { x.fillStyle = css(T.solidCol, T.solid * .85); x.fillRect(0, MID - H * .27, HW, H * .54); }
+      x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'destination-in';
+      const g = x.createLinearGradient(HEAD * .8 * SC, 0, HW * SC, 0); g.addColorStop(0, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.fillRect(0, 0, hcv.width, hcv.height);
+      }
+      body.save(); body.setTransform(1, 0, 0, 1, 0, 0); body.drawImage(hcv, 0, 0); body.restore();
+    }
+    {
+      // mouth line, heat pits along the upper lip, nostrils
+      const line = mix(P.belly, [20, 16, 14], .55);
+      x.strokeStyle = css(line, .8); x.lineWidth = 1.6;
+      x.save(); x.strokeStyle = css(line, .35); x.lineWidth = 1;
+      x.strokeStyle = css(line, .16); for (const side of [-1, 1]) for (let k = 0; k < 14; k++) { const lx = HEAD * (.04 + k * .065); x.beginPath(); x.moveTo(lx, MID + side * H * .262); x.lineTo(lx + 1, MID + side * H * .3); x.stroke(); }
       x.restore();
+      for (const side of [-1, 1]) {
+        x.beginPath(); x.moveTo(0, MID + side * H * .29); x.quadraticCurveTo(HEAD * .6, MID + side * H * .275, HEAD * .98, MID + side * H * .255); x.stroke();
+        x.fillStyle = css(line, .75);
+        for (let k = 0; k < 5; k++) { x.beginPath(); x.ellipse(HEAD * (.1 + k * .13), MID + side * H * .265, 2.2, 1.4, 0, 0, 7); x.fill(); }
+        x.fillStyle = css([18, 14, 12], .85); x.beginPath(); x.ellipse(HEAD * .045, MID + side * H * .07, 2.4, 3, 0, 0, 7); x.fill();
+      }
     }
 
     // pied: per column, a coloured band around the back of varying width; everything outside it is white
     if (T.pied && !T.leu) {
-      const img = x.getImageData(0, 0, W, H), d = img.data;
+      const img = x.getImageData(0, 0, W * SC, H * SC), d = img.data, WW = W * SC, HH = H * SC;
       const ph1 = r() * 6.3, ph2 = r() * 6.3, ph3 = r() * 6.3, f1 = 7 + r() * 5;
       const white = [248, 245, 239], want = .18 + r() * .32; // share of the body that keeps colour, varies a lot between animals
       const bandAt = (s, amt) => {
@@ -373,38 +400,65 @@ window.UNEAnim = (() => {
       let lo = 0, hi = 1;
       for (let it = 0; it < 18; it++) { const amt = (lo + hi) / 2; let cov = 0; for (let q = 0; q < 200; q++) cov += Math.max(0, bandAt(q / 200, amt)) / .5; (cov / 200 > want) ? lo = amt : hi = amt; }
       const amt = lo;
-      for (let X = 0; X < W; X++) {
-        const band = bandAt(X / W, amt);
-        for (let Y = 0; Y < H; Y++) {
-          const dv = Math.abs(Y / H - .5), e = .022 * Math.sin(Y * .23 + X * .061) + .015 * Math.sin(X * .17 - Y * .11);
-          if (dv > band + e) { const i = (Y * W + X) * 4; d[i] = white[0]; d[i + 1] = white[1]; d[i + 2] = white[2]; }
+      for (let X = 0; X < WW; X++) {
+        const band = bandAt(X / WW, amt), lx = X / SC;
+        for (let Y = 0; Y < HH; Y++) {
+          const ly = Y / SC, dv = Math.abs(ly / H - .5), e = .022 * Math.sin(ly * .23 + lx * .061) + .015 * Math.sin(lx * .17 - ly * .11);
+          if (dv > band + e) { const i = (Y * WW + X) * 4; d[i] = white[0]; d[i + 1] = white[1]; d[i + 2] = white[2]; }
         }
       }
       x.putImageData(img, 0, 0);
     }
+    // scale relief: darker scale edges and belly plates, the same lattice the bump map uses
+    x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'multiply'; x.globalAlpha = .32; x.drawImage(scaleCanvas(), 0, 0); x.restore();
     return c;
   }
 
-  function scaleBumpCanvas() {
-    const c = document.createElement('canvas'); c.width = 256; c.height = 64; const x = c.getContext('2d');
-    x.fillStyle = '#000'; x.fillRect(0, 0, 256, 64);
-    const cw = 16, ch = 16;
-    for (let row = -1; row <= 4; row++) for (let col = -1; col <= 16; col++) {
-      const cx = col * cw + (row % 2 ? cw / 2 : 0), cy = row * ch;
-      const g = x.createRadialGradient(cx - 2, cy, 1, cx, cy, cw * .62); g.addColorStop(0, '#fff'); g.addColorStop(.7, '#9a9a9a'); g.addColorStop(1, '#000');
-      x.fillStyle = g; x.beginPath(); x.moveTo(cx - cw * .55, cy); x.lineTo(cx, cy - ch * .55); x.lineTo(cx + cw * .55, cy); x.lineTo(cx, cy + ch * .55); x.closePath(); x.fill();
+  /* Scale lattice in skin coordinates: small overlapping dorsal scales, wide plates on the belly.
+     Used twice: multiplied into the colour (edges darken) and as the bump map (scales stand out). */
+  let scaleCv = null;
+  function scaleCanvas() {
+    if (scaleCv) return scaleCv;
+    const c = document.createElement('canvas'); c.width = W * SC; c.height = H * SC; const x = c.getContext('2d');
+    x.setTransform(SC, 0, 0, SC, 0, 0);
+    x.fillStyle = '#8c8c8c'; x.fillRect(0, 0, W, H);
+    const cw = 9.5, ch = 5.4, belly = H * .1;
+    for (let row = 0; row * ch / 2 < H + ch; row++) {
+      const cy = row * ch / 2; if (cy < belly - 2 || cy > H - belly + 2) continue;
+      for (let cx = (row % 2) * cw / 2; cx < W + cw; cx += cw) {
+        const g = x.createRadialGradient(cx - cw * .12, cy - ch * .08, .3, cx, cy, cw * .55);
+        g.addColorStop(0, '#ffffff'); g.addColorStop(.55, '#ededed'); g.addColorStop(1, '#9a9a9a');
+        x.fillStyle = g; x.beginPath(); x.ellipse(cx, cy, cw * .56, ch * .62, 0, 0, 7); x.fill();
+      }
     }
-    return c;
+    for (const [y0, y1] of [[0, belly], [H - belly, H]]) {
+      for (let px = 0; px < W; px += 10) {
+        const g = x.createLinearGradient(px, 0, px + 10, 0); g.addColorStop(0, '#a0a0a0'); g.addColorStop(.25, '#f4f4f4'); g.addColorStop(1, '#d8d8d8');
+        x.fillStyle = g; x.fillRect(px, y0, 10, y1 - y0);
+      }
+    }
+    return (scaleCv = c);
   }
 
   /* ---------- body shape ---------- */
-  const NR = 190, MR = 26;
-  const PROF = [[0, .22, .16], [.006, .42, .28], [.016, .58, .38], [.03, .72, .46], [.042, .7, .48], [.056, .5, .46], [.075, .56, .56], [.14, .76, .76], [.3, .96, .96], [.45, 1, 1], [.62, .97, .97], [.78, .8, .8], [.86, .58, .58], [.93, .3, .3], [1, .03, .03]];
-  function profFor(hs) { return PROF.map(([s, w, h]) => s < .07 ? [s * hs, w * Math.pow(hs, .6), h * Math.pow(hs, .6)] : [s, w, h]); }
+  const NR = 200, MR = 32;
+  /* [s along the body, half-width, half-height, top flatness] as fractions of the body radius.
+     Ball python head: rounded snout, widest at the jaw angle, then a clearly narrower neck. */
+  const PROF = [
+    [0, .1, .085, 2.2], [.003, .2, .16, 2.3], [.009, .28, .22, 2.4], [.017, .34, .265, 2.5], [.027, .41, .295, 2.5], [.037, .47, .315, 2.4],
+    [.045, .5, .325, 2.3], [.053, .44, .33, 2.2], [.061, .39, .345, 2.1], [.078, .43, .41, 2], [.1, .54, .52, 2], [.18, .8, .77, 2],
+    [.3, .96, .93, 2], [.45, 1, .96, 2], [.62, .97, .94, 2], [.78, .8, .78, 2], [.86, .56, .55, 2], [.93, .28, .28, 2], [1, .03, .03, 2]];
+  // hatchlings have proportionally bigger heads
+  function profFor(hs) { const k = Math.pow(hs, 1.4); return PROF.map(([s, w, h, n]) => s < .07 ? [s * hs, w * k, h * k, n] : [s, w, h, n]); }
   function prof(pr, s) {
     let i = 1; while (i < pr.length - 1 && pr[i][0] < s) i++;
     const a = pr[i - 1], b = pr[i], k = Math.max(0, Math.min(1, (s - a[0]) / (b[0] - a[0] || 1))), e = (1 - Math.cos(Math.PI * k)) / 2;
-    return [a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e];
+    return [a[1] + (b[1] - a[1]) * e, a[2] + (b[2] - a[2]) * e, a[3] + (b[3] - a[3]) * e];
+  }
+  /* point on a ring's cross-section: superellipse, flatter on top for the head and flat on the belly */
+  function section(th, n) {
+    const c = Math.cos(th), sn = Math.sin(th), m = sn < 0 ? 2.8 : n, f = (v, e) => Math.sign(v) * Math.pow(Math.abs(v), 2 / e);
+    return [f(c, m), f(sn, m) * (sn < 0 ? .8 : 1)];
   }
   const SI = Array.from({ length: NR + 1 }, (_, i) => { const u = i / NR; return u * (.45 + .55 * u); }); // denser rings at the head
 
@@ -418,35 +472,66 @@ window.UNEAnim = (() => {
   }
 
   /* Poses return NR+1 spine points [x, lift, z], snout first. */
-  function poseSlither(len, rmax, t) {
-    const R = len * .36, wig = len * .045, K = 9, pts = [];
-    for (let i = 0; i <= 720; i++) { const a = -i / 720 * Math.PI * 2, rr = R + wig * Math.sin(K * a); pts.push([rr * Math.cos(a), 0, rr * Math.sin(a)]); }
-    const c = cumLen(pts), tot = c[c.length - 1], head = (t * .045 % 1) * tot;
-    return SI.map(s => {
-      let d = head - s * len; d = ((d % tot) + tot) % tot;
-      const p = at(pts, c, d), lift = s < .07 ? rmax * .55 * Math.pow(1 - s / .07, 2) * (1 + .15 * Math.sin(t * 1.7)) : 0;
-      return [p[0], lift, p[2]];
-    });
+  // turn the head a little to the side, as if looking around
+  function lookAround(sp, rm, amt) {
+    for (let i = 0; i <= NR && SI[i] < .1; i++) {
+      const a = sp[i], b = sp[Math.min(i + 1, NR)], dx = b[0] - a[0], dz = b[2] - a[2], l = Math.hypot(dx, dz) || 1, k = amt * rm * Math.pow(1 - SI[i] / .1, 2);
+      a[0] += -dz / l * k; a[2] += dx / l * k;
+    }
+    return sp;
   }
-  function poseCoil(len, rmax, t) {
-    const gap = rmax * 2.05, rin = rmax * 1.5, pts = [];
+  // Move: a slow, mostly straight crawl (ball pythons creep rather than whip from side to side).
+  function poseMove(len, rm, t) {
+    const R = len * .34, wig = len * .022, pts = [];
+    for (let i = 0; i <= 900; i++) { const a = -i / 900 * Math.PI * 2, rr = R * (1 + .12 * Math.sin(2 * a + .7)) + wig * Math.sin(6 * a); pts.push([rr * Math.cos(a), 0, rr * Math.sin(a)]); }
+    const c = cumLen(pts), tot = c[c.length - 1], head = (t * .03 * len) % tot; // about 3–4 cm a second for an adult
+    const sp = SI.map(s => {
+      let d = head - s * len + len * .0035 * Math.sin(s * 95 - t * 2.2); // belly ripple of rectilinear creeping
+      d = ((d % tot) + tot) % tot;
+      const p = at(pts, c, d);
+      return [p[0], s < .09 ? rm * (.55 + .2 * Math.sin(t * .7)) * Math.pow(1 - s / .09, 2) : 0, p[2]];
+    });
+    return lookAround(sp, rm, .5 * Math.sin(t * .45));
+  }
+  // Stay: a loose resting coil, head on top; it lifts its head now and then.
+  function poseStay(len, rm, t) {
+    const gap = rm * 2.05, rin = rm * 1.6, pts = [];
     let th = 0, r0 = rin, d = 0, prev = [rin, 0, 0];
     pts.push(prev);
-    while (d < len * .86) { th += .04; r0 = rin + gap * th / (Math.PI * 2); const p = [r0 * Math.cos(th), 0, r0 * Math.sin(th)]; d += Math.hypot(p[0] - prev[0], p[2] - prev[2]); pts.push(p); prev = p; }
-    const th0 = th, rout = r0, breathe = 1 + .012 * Math.sin(t * 1.4);
-    for (let k = 1; k <= 60; k++) { const u = k / 60, a = th0 + u * 1.5, rr = rout * (1 - .6 * u), y = rmax * 1.85 * Math.min(1, u / .3); pts.push([rr * Math.cos(a), y, rr * Math.sin(a)]); }
-    const sway = .06 * Math.sin(t * .9);
-    const p2 = pts.map(([x, y, z]) => [x * breathe, y, z * breathe]);
+    while (d < len * .86) { th += .03; r0 = rin + gap * th / (Math.PI * 2); const p = [r0 * Math.cos(th), 0, r0 * Math.sin(th)]; d += Math.hypot(p[0] - prev[0], p[2] - prev[2]); pts.push(p); prev = p; }
+    const th0 = th, rout = r0;
+    for (let k = 1; k <= 80; k++) { const u = k / 80, a = th0 + u * 1.5, rr = rout * (1 - .6 * u), y = rm * 1.75 * Math.min(1, u / .3); pts.push([rr * Math.cos(a), y, rr * Math.sin(a)]); }
+    const br = 1 + .01 * Math.sin(t * 1.1), p2 = pts.map(([x, y, z]) => [x * br, y, z * br]);
+    const c = cumLen(p2), tot = c[c.length - 1], raise = rm * .9 * Math.pow(Math.max(0, Math.sin(t * .21)), 6);
+    const sp = SI.map(s => { const p = at(p2, c, tot - s * len); if (s < .07) p[1] += (rm * .15 + raise) * Math.pow(1 - s / .07, 2); return p; });
+    return lookAround(sp, rm, .35 * Math.sin(t * .3));
+  }
+  // Ball up: coils stacked into a mound with the head tucked inside, the classic defensive ball.
+  function poseBall(len, rm, t) {
+    // coils wind upward and tilt, so the stack bulges into a rounded ball rather than a flat ring
+    const turns = 2.35, rise = rm * 1.6, helix = (R0, n = 320) => {
+      const p = [];
+      for (let i = 0; i <= n; i++) {
+        const f = i / n, th = f * turns * Math.PI * 2, R = R0 * (1 - .3 * Math.pow(f, 1.3)), tilt = rm * .55 * Math.sin(th * .5 + 1) * Math.min(1, f * 3);
+        p.push([R * Math.cos(th), Math.max(0, f * turns * rise + tilt * Math.sin(th)), R * Math.sin(th)]);
+      }
+      return p;
+    };
+    let lo = rm, hi = len; // find the coil radius that uses ~86% of the body
+    for (let i = 0; i < 24; i++) { const m = (lo + hi) / 2, c = cumLen(helix(m, 120)); c[c.length - 1] > len * .88 ? hi = m : lo = m; }
+    const pts = helix(lo), e = pts[pts.length - 1], th = turns * Math.PI * 2;
+    for (let k = 1; k <= 60; k++) { const u = k / 60, a = th + u * 1.3, rr = lo * .7 * (1 - u); pts.push([rr * Math.cos(a), e[1] - u * rise * 1.1, rr * Math.sin(a)]); }
+    const br = 1 + .008 * Math.sin(t * 1.2), p2 = pts.map(([x, y, z]) => [x * br, y, z * br]);
     const c = cumLen(p2), tot = c[c.length - 1];
-    return SI.map(s => { const p = at(p2, c, tot - s * len); if (s < .05) { const k = 1 - s / .05; p[0] += -p[2] * sway * k * .3; p[2] += p[0] * sway * k * .3; p[1] += rmax * .25 * k; } return p; });
+    return SI.map(s => at(p2, c, tot - s * len));
   }
-  function poseLine(len, rmax, t) {
+  function poseLine(len, rm, t) {
     const pts = [];
-    for (let i = 0; i <= 400; i++) { const q = i / 400 * 1.1; pts.push([q * len, 0, len * .022 * Math.sin(q * Math.PI * 2.4 - t * 2) * Math.min(1, q * 4)]); }
+    for (let i = 0; i <= 400; i++) { const q = i / 400 * 1.1; pts.push([q * len, 0, len * .018 * Math.sin(q * Math.PI * 2.4 - t * .8) * Math.min(1, q * 4)]); }
     const c = cumLen(pts);
-    return SI.map(s => { const p = at(pts, c, s * len); if (s < .06) p[1] = rmax * .35 * Math.pow(1 - s / .06, 2); return p; });
+    return lookAround(SI.map(s => { const p = at(pts, c, s * len); if (s < .08) p[1] = rm * .5 * Math.pow(1 - s / .08, 2); return p; }), rm, .4 * Math.sin(t * .4));
   }
-  const POSES = { slither: poseSlither, coil: poseCoil, line: poseLine };
+  const POSES = { move: poseMove, stay: poseStay, ball: poseBall, line: poseLine };
 
   /* ---------- three.js scene ---------- */
   let THREE = null, loading = null, renderer, scene, camera, hemi, key, ground, grid, ruler, rulerKey = '', bumpTex, raf = 0, last = 0, clock = 0, host = null, ro = null;
@@ -461,18 +546,30 @@ window.UNEAnim = (() => {
     for (let i = 0; i < NR; i++) for (let j = 0; j < MR; j++) { const a = i * (MR + 1) + j, b = a + MR + 1; idx.push(a, b, a + 1, b, b + 1, a + 1); }
     for (let j = 0; j < MR; j++) { idx.push(ringV, j, j + 1); const a = NR * (MR + 1) + j; idx.push(ringV + 1, a + 1, a); }
     geo.setIndex(idx); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2));
-    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
-    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
-    const mat = new THREE.MeshPhysicalMaterial({ map: tex, bumpMap: bumpTex, bumpScale: .35, roughness: .46, clearcoat: .35, clearcoatRoughness: .4 });
+    const cv = document.createElement('canvas'); cv.width = W * SC; cv.height = H * SC;
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    // satin skin: soft clearcoat plus a faint iridescent sheen, scales from the bump map
+    const mat = new THREE.MeshPhysicalMaterial({ map: tex, bumpMap: bumpTex, bumpScale: 1.6, roughness: .6, clearcoat: .3, clearcoatRoughness: .3, iridescence: .06, iridescenceIOR: 1.3, iridescenceThicknessRange: [200, 500], sheen: 0, sheenRoughness: .6, sheenColor: 0xffffff });
     const mesh = new THREE.Mesh(geo, mat); mesh.castShadow = true; mesh.receiveShadow = true; mesh.frustumCulled = false;
-    const eyeMat = new THREE.MeshPhysicalMaterial({ color: 0x111111, roughness: .08, clearcoat: 1 });
-    const eyes = [0, 1].map(() => { const e = new THREE.Mesh(new THREE.SphereGeometry(1, 18, 14), eyeMat); scene.add(e); return e; });
+    const ecv = document.createElement('canvas'); ecv.width = 128; ecv.height = 64;
+    const eyeTex = new THREE.CanvasTexture(ecv); eyeTex.colorSpace = THREE.SRGBColorSpace;
+    const eyeMat = new THREE.MeshPhysicalMaterial({ map: eyeTex, roughness: .05, clearcoat: 1, clearcoatRoughness: .02 });
+    const eyes = [0, 1].map(() => { const e = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 18), eyeMat); scene.add(e); return e; });
     const tMat = new THREE.MeshStandardMaterial({ color: 0x2a1e20, roughness: .5 });
     const tongue = new THREE.Group();
     const stem = new THREE.Mesh(new THREE.BoxGeometry(1, .5, .6).translate(0, 0, .3), tMat); tongue.add(stem);
     for (const sd of [-1, 1]) { const f = new THREE.Mesh(new THREE.BoxGeometry(.8, .4, .45).translate(0, 0, .22), tMat); f.position.z = .58; f.rotation.y = sd * .35; tongue.add(f); }
     scene.add(mesh, tongue);
-    return { mesh, geo, tex, eyes, eyeMat, tMat, tongue, prev: null, blend: 1, pose: null, len: 0, rmax: 0, hs: 1, profile: null, offset: [0, 0, 0], skinKey: '' };
+    return { mesh, geo, tex, eyes, eyeMat, eyeTex, tMat, tongue, prev: null, blend: 1, pose: null, len: 0, rmax: 0, hs: 1, profile: null, offset: [0, 0, 0], skinKey: '' };
+  }
+
+  /* iris colour with a vertical pupil at +z of the sphere (u = .25) */
+  function paintEye(cv, col) {
+    const x = cv.getContext('2d'), dark = lum(col) < 60;
+    x.fillStyle = css(col); x.fillRect(0, 0, 128, 64);
+    const g = x.createRadialGradient(32, 32, 2, 32, 32, 26); g.addColorStop(0, css(mix(col, [255, 255, 255], .12))); g.addColorStop(1, css(mix(col, [0, 0, 0], .35)));
+    x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+    x.fillStyle = css(dark ? [4, 3, 3] : mix(col, [0, 0, 0], .75)); x.beginPath(); x.ellipse(32, 32, 3.2, 13, 0, 0, 7); x.fill();
   }
 
   const V = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
@@ -485,42 +582,45 @@ window.UNEAnim = (() => {
     for (let i = 0; i <= NR; i++) {
       const T = N3(V(spine[Math.min(i + 1, NR)], spine[Math.max(i - 1, 0)]));
       const side = N3(X3(T, [0, 1, 0])), up = X3(side, T);
-      const [w, h] = prof(pr, SI[i]), ww = w * rm, hh = h * rm;
+      const [w, h, n] = prof(pr, SI[i]), ww = w * rm, hh = h * rm;
       const C = [spine[i][0] + o[0], spine[i][1] + hh * .8 + o[1], spine[i][2] + o[2]];
-      centers.push(C); sides.push(side); ups.push(up); tans.push(T); hw.push([ww, hh]);
+      centers.push(C); sides.push(side); ups.push(up); tans.push(T); hw.push([ww, hh, n]);
       for (let j = 0; j <= MR; j++) {
-        const th = j / MR * Math.PI * 2 - Math.PI / 2, cs = Math.cos(th), sn2 = Math.sin(th), k = sn2 < 0 ? .8 : 1, v = (i * (MR + 1) + j) * 3;
-        for (let q = 0; q < 3; q++) pos[v + q] = C[q] + side[q] * cs * ww + up[q] * sn2 * hh * k;
+        const [sx, sy] = section(j / MR * Math.PI * 2 - Math.PI / 2, n), v = (i * (MR + 1) + j) * 3;
+        for (let q = 0; q < 3; q++) pos[v + q] = C[q] + side[q] * sx * ww + up[q] * sy * hh;
       }
     }
     const ringV = (NR + 1) * (MR + 1), T0 = tans[0], c0 = centers[0], cN = centers[NR], TN = tans[NR];
-    for (let q = 0; q < 3; q++) { pos[ringV * 3 + q] = c0[q] - T0[q] * hw[0][0] * .55; pos[(ringV + 1) * 3 + q] = cN[q] + TN[q] * rm * .05; }
+    for (let q = 0; q < 3; q++) { pos[ringV * 3 + q] = c0[q] - T0[q] * hw[0][0] * .35 - (q === 1 ? hw[0][1] * .15 : 0); pos[(ringV + 1) * 3 + q] = cN[q] + TN[q] * rm * .05; }
     sn.geo.attributes.position.needsUpdate = true; sn.geo.computeVertexNormals();
 
     // eyes
-    const se = .023 * sn.hs; let ie = 0; while (ie < NR && SI[ie] < se) ie++;
-    const [ew, eh] = hw[ie], er = rm * .12 * Math.pow(sn.hs, 1.2);
+    const se = .019 * sn.hs; let ie = 0; while (ie < NR && SI[ie] < se) ie++;
+    const [ew, eh, en] = hw[ie], er = rm * .105 * Math.pow(sn.hs, 1.3), [ex, ey] = section(.45, en);
+    sn.headPos = centers[ie];
     sn.eyes.forEach((e, k) => {
-      const sd = k ? 1 : -1, C = centers[ie], s = sides[ie], u = ups[ie];
-      e.position.set(C[0] + s[0] * sd * ew * .84 + u[0] * eh * .3, C[1] + s[1] * sd * ew * .84 + u[1] * eh * .3, C[2] + s[2] * sd * ew * .84 + u[2] * eh * .3);
-      e.scale.set(er, er * .9, er * 1.1);
+      const sd = k ? 1 : -1, C = centers[ie], s = sides[ie], u = ups[ie], p = [0, 0, 0];
+      for (let q = 0; q < 3; q++) p[q] = C[q] + s[q] * sd * (ex * ew - er * .62) + u[q] * ey * eh;
+      e.position.set(p[0], p[1], p[2]); e.scale.set(er, er, er);
+      e.lookAt(p[0] + s[0] * sd + tans[ie][0] * -.35, p[1] + s[1] * sd + .15, p[2] + s[2] * sd + tans[ie][2] * -.35);
     });
     // tongue flicks for half a second every few seconds
-    const cyc = (t + sn.offset[2] * 3) % 3.4, ext = cyc < .55 ? Math.sin(cyc / .55 * Math.PI) : 0;
+    const every = sn.pose === 'stay' ? 6.5 : 4.2, cyc = (t + sn.offset[2] * 3) % every;
+    const ext = sn.pose === 'ball' ? 0 : cyc < .7 ? Math.sin(cyc / .7 * Math.PI) : 0;
     sn.tongue.visible = ext > .02;
     if (sn.tongue.visible) {
       const tip = [c0[0] - T0[0] * hw[0][0] * .5, c0[1] - hw[0][1] * .45, c0[2] - T0[2] * hw[0][0] * .5];
       sn.tongue.position.set(tip[0], tip[1], tip[2]);
       sn.tongue.lookAt(tip[0] - T0[0], tip[1] - T0[1] - .25, tip[2] - T0[2]);
-      sn.tongue.scale.set(rm * .07, rm * .07, rm * .9 * ext);
-      sn.tongue.children[1].rotation.y = -.35 - .25 * Math.sin(t * 40); sn.tongue.children[2].rotation.y = .35 + .25 * Math.sin(t * 40);
+      sn.tongue.scale.set(rm * .05, rm * .05, rm * .75 * ext);
+      sn.tongue.children[1].rotation.y = -.35 - .25 * Math.sin(t * 24); sn.tongue.children[2].rotation.y = .35 + .25 * Math.sin(t * 24);
     }
     return centers[0];
   }
 
   function themeColors() {
     const light = document.documentElement.dataset.theme === 'light';
-    return light ? { bg: 0xf2f0ec, ground: 0xe6e1d9, line: 0xc9c1b4, ink: '#3a342d', tick: '#8b8278' } : { bg: 0x0e0d0c, ground: 0x1a1816, line: 0x34302b, ink: '#d9d3c8', tick: '#7d766c' };
+    return light ? { bg: 0xf2f0ec, ground: 0xe6e1d9, line: 0xc9c1b4, ink: '#3a342d', tick: '#8b8278' } : { bg: 0x0e0d0c, ground: 0x12110f, line: 0x34302b, ink: '#d9d3c8', tick: '#7d766c' };
   }
   function applyTheme() {
     if (!scene) return;
@@ -554,16 +654,24 @@ window.UNEAnim = (() => {
   function initScene() {
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 2));
-    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = .92;
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(32, 1.6, .01, 60);
-    hemi = new THREE.HemisphereLight(0xfff3e2, 0x3b322a, 1.5); scene.add(hemi);
-    key = new THREE.DirectionalLight(0xffffff, 2.6); key.position.set(1.2, 3, 1.6); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -.0004; key.shadow.normalBias = .01; scene.add(key, key.target);
+    // soft studio reflections: a small room of light panels baked into an environment map
+    const pm = new THREE.PMREMGenerator(renderer), env = new THREE.Scene();
+    env.add(new THREE.Mesh(new THREE.BoxGeometry(12, 8, 12), new THREE.MeshBasicMaterial({ color: 0x3a3632, side: THREE.BackSide })));
+    for (const [px, py, pz, w, h, k] of [[0, 3.9, 0, 6, 6, 5], [-5.9, 1.5, 1, 3, 3, 2.2], [5.9, 1, -2, 2, 4, 1.4], [0, 1.2, -5.9, 5, 2, 1.2]]) {
+      const panel = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ color: new THREE.Color(k, k * .97, k * .92), side: THREE.DoubleSide }));
+      panel.position.set(px, py, pz); panel.lookAt(0, 0, 0); env.add(panel);
+    }
+    scene.environment = pm.fromScene(env, .04).texture; scene.environmentIntensity = .38; pm.dispose();
+    hemi = new THREE.HemisphereLight(0xfff3e2, 0x3b322a, .8); scene.add(hemi);
+    key = new THREE.DirectionalLight(0xfff6ea, 2); key.position.set(1.2, 3, 1.6); key.castShadow = true; key.shadow.mapSize.set(2048, 2048); key.shadow.bias = -.0004; key.shadow.normalBias = .01; key.shadow.radius = 6; scene.add(key, key.target);
     const rim = new THREE.DirectionalLight(0xcfe0ff, 1.1); rim.position.set(-2, 1.4, -2.5); scene.add(rim);
-    ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: 0x1a1816, roughness: .95 }));
+    ground = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: 0x1a1816, roughness: .95, envMapIntensity: .15 }));
     ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
-    const bc = scaleBumpCanvas(); bumpTex = new THREE.CanvasTexture(bc); bumpTex.wrapS = bumpTex.wrapT = THREE.RepeatWrapping; bumpTex.repeat.set(11, 7.5);
+    bumpTex = new THREE.CanvasTexture(scaleCanvas()); bumpTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     for (let i = 0; i < 3; i++) snakes.push(makeSnake());
     new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     applyTheme();
@@ -587,7 +695,7 @@ window.UNEAnim = (() => {
       if (sn.skinKey !== skinKey) {
         const ph = phenotype(S.genes, stageKey);
         paint(ph, S.seed, st.head, sn.tex.image); sn.tex.needsUpdate = true; sn.skinKey = skinKey;
-        sn.eyeMat.color.setRGB(...ph.P.eye.map(v => Math.pow(v / 255, 2.2)));
+        paintEye(sn.eyeTex.image, ph.P.eye); sn.eyeTex.needsUpdate = true;
         sn.tMat.color.setRGB(...ph.P.tongue.map(v => Math.pow(v / 255, 2.2)));
       }
     });
@@ -604,8 +712,8 @@ window.UNEAnim = (() => {
     const st = STAGES[S.stage];
     if (cmp) { ruler.position.set(.75, .002, .48); cam.target = [.75, 0, .1]; cam.fit = .82; grid.position.x = .75; }
     else {
-      const ext = S.pose === 'slither' ? st.len * .44 : st.len * .2;
-      ruler.position.set(0, .002, ext + st.len / st.girth + .03 + ruler.userData.depth / 2); cam.target = [0, 0, .1 * st.len]; cam.fit = ext * .95 + .04; grid.position.x = 0;
+      const ext = { move: st.len * .4, stay: st.len * .2, ball: st.len * .17 }[S.pose];
+      ruler.position.set(0, .002, ext + st.len / st.girth + .03 + ruler.userData.depth / 2); cam.target = S.pose === 'ball' ? [0, st.len / st.girth * 2.2, 0] : S.pose === 'stay' ? [0, 0, 0] : [0, 0, .1 * st.len]; cam.fit = ext * .95 + .04; grid.position.x = 0;
     }
     key.shadow.camera.left = key.shadow.camera.bottom = -(cmp ? 1.2 : st.len); key.shadow.camera.right = key.shadow.camera.top = cmp ? 1.2 : st.len;
     key.position.set(cam.target[0] + 1.2, 3, cam.target[2] + 1.6); key.target.position.set(...cam.target); key.shadow.camera.updateProjectionMatrix();
@@ -618,10 +726,11 @@ window.UNEAnim = (() => {
     if (!host || !renderer) return;
     // camera: ease toward the framed position
     const aspect = camera.aspect, vf = camera.fov * Math.PI / 180, hf = 2 * Math.atan(Math.tan(vf / 2) * aspect);
-    const want = cam.fit / Math.tan(Math.min(vf, hf) / 2) * cam.zoom;
+    const hc = S.headCam && !S.compare && snakes[0]?.headPos, sn0 = snakes[0];
+    const want = (hc ? sn0.rmax * Math.pow(sn0.hs, 1.4) * 1.5 : cam.fit) / Math.tan(Math.min(vf, hf) / 2) * cam.zoom, tgt = hc ? sn0.headPos : cam.target;
     if (!cam.cur) cam.cur = { d: want, t: cam.target.slice() };
     const e = 1 - Math.pow(.002, dt);
-    cam.cur.d += (want - cam.cur.d) * e; for (let q = 0; q < 3; q++) cam.cur.t[q] += (cam.target[q] - cam.cur.t[q]) * e;
+    cam.cur.d += (want - cam.cur.d) * e; for (let q = 0; q < 3; q++) cam.cur.t[q] += (tgt[q] - cam.cur.t[q]) * e;
     const d = cam.cur.d, tg = cam.cur.t;
     camera.position.set(tg[0] + d * Math.cos(cam.pitch) * Math.sin(cam.yaw), tg[1] + d * Math.sin(cam.pitch), tg[2] + d * Math.cos(cam.pitch) * Math.cos(cam.yaw));
     camera.lookAt(tg[0], tg[1], tg[2]);
@@ -632,7 +741,7 @@ window.UNEAnim = (() => {
       sn.profile = profFor(sn.hs);
       let sp = POSES[sn.pose](sn.len, sn.rmax, clock + k * 1.3);
       if (sn.blend < 1 && sn.prev) {
-        sn.blend = Math.min(1, sn.blend + dt * 1.4); const b = sn.blend * sn.blend * (3 - 2 * sn.blend);
+        sn.blend = Math.min(1, sn.blend + dt * .55); const b = sn.blend * sn.blend * (3 - 2 * sn.blend);
         sp = sp.map((p, i) => [sn.prev[i][0] + (p[0] - sn.prev[i][0]) * b, sn.prev[i][1] + (p[1] - sn.prev[i][1]) * b, sn.prev[i][2] + (p[2] - sn.prev[i][2]) * b]);
       }
       sn.lastSpine = sp;
@@ -695,6 +804,7 @@ window.UNEAnim = (() => {
         <p class="an-msg" id="an-msg">${tx('loading')}</p>
         <p class="an-vname" id="an-vname" aria-hidden="true"></p>
         ${ORDER.map((k, i) => `<span class="an-lab" data-lab="${i}" hidden>${esc(st(k))}</span>`).join('')}
+        <button type="button" class="btn btn-ghost btn-sm an-headcam" data-headcam aria-pressed="false">${tx('headcam')}</button>
         <div class="an-zoom">
           <button type="button" class="icon-btn" data-zoom="in" aria-label="${tx('zoomIn')}">+</button>
           <button type="button" class="icon-btn" data-zoom="out" aria-label="${tx('zoomOut')}">−</button>
@@ -706,8 +816,9 @@ window.UNEAnim = (() => {
           <button type="button" data-stage="compare">${tx('compare')}</button>
         </div>
         <div class="seg" role="group" aria-label="${tx('pose')}" id="an-pose">
-          <button type="button" data-pose="slither">${tx('slither')}</button>
-          <button type="button" data-pose="coil">${tx('coil')}</button>
+          <button type="button" data-pose="move">${tx('move')}</button>
+          <button type="button" data-pose="stay">${tx('stay')}</button>
+          <button type="button" data-pose="ball">${tx('ball')}</button>
         </div>
         <button type="button" class="btn btn-ghost btn-sm" data-play></button>
         <button type="button" class="btn btn-ghost btn-sm" data-reroll title="${tx('rerollTip')}">${tx('reroll')}</button>
@@ -759,11 +870,12 @@ window.UNEAnim = (() => {
       : `<div><dt>${tx('age')}</dt><dd>${esc(sz(S.stage)[1])}</dd></div><div><dt>${tx('len')}</dt><dd>${esc(sz(S.stage)[2])}</dd></div><div><dt>${tx('wt')}</dt><dd>${esc(sz(S.stage)[3])}</dd></div>`;
     root.querySelectorAll('[data-stage]').forEach(b => b.setAttribute('aria-pressed', S.compare ? b.dataset.stage === 'compare' : b.dataset.stage === S.stage));
     root.querySelectorAll('[data-pose]').forEach(b => { b.setAttribute('aria-pressed', b.dataset.pose === S.pose); b.disabled = S.compare; });
+    const hb = $('[data-headcam]', root); hb.setAttribute('aria-pressed', !!S.headCam && !S.compare); hb.hidden = S.compare;
     const pb = $('[data-play]', root); pb.textContent = S.playing ? tx('play') : tx('resume'); pb.setAttribute('aria-pressed', !S.playing);
     // flat skin preview (also the fallback when WebGL is unavailable)
     const ph = phenotype(S.genes, S.compare ? 'adult' : S.stage), sk = $('#an-skin', root);
     const tmp = paint(ph, S.seed, STAGES[S.compare ? 'adult' : S.stage].head);
-    sk.getContext('2d').drawImage(tmp, 0, 0);
+    sk.getContext('2d').drawImage(tmp, 0, 0, W, H);
   }
 
   function update({ genes = true } = {}) {
@@ -792,6 +904,7 @@ window.UNEAnim = (() => {
     if (b.dataset.pose) { S.pose = b.dataset.pose; return update({ genes: false }); }
     if ('play' in b.dataset) { S.playing = !S.playing; return renderInfo(); }
     if ('reroll' in b.dataset) { S.seed = (S.seed * 48271 + 11) % 2147483647; return update({ genes: false }); }
+    if ('headcam' in b.dataset) { S.headCam = !S.headCam; cam.zoom = 1; if (S.headCam) Object.assign(cam, { pitch: .32 }); return renderInfo(); }
     if (b.dataset.zoom) { cam.zoom = Math.max(.35, Math.min(2.5, cam.zoom * (b.dataset.zoom === 'in' ? .8 : 1.25))); return; }
     if ('copylink' in b.dataset) { b.dataset.copy = location.href; b.dataset.copyLabel = 'link'; }
   }

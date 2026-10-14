@@ -378,7 +378,9 @@ h1, h2, h3, p { margin: 0; }
 .an-viewer canvas:active { cursor: grabbing; }
 .an-msg { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); font-size: 15px; }
 .an-lab { position: absolute; left: 0; top: 0; padding: 3px 9px; margin-left: -10px; border-radius: 999px; background: color-mix(in srgb, var(--bg) 82%, transparent); border: 1px solid var(--line); font-size: 12.5px; font-weight: 600; white-space: nowrap; pointer-events: none; }
-.an-vname { position: absolute; left: 12px; top: 10px; right: 60px; font-weight: 700; font-size: 15px; color: var(--accent); pointer-events: none; text-shadow: 0 1px 8px var(--bg); }
+.an-vname { position: absolute; left: 12px; top: 14px; right: 150px; font-weight: 700; font-size: 15px; color: var(--accent); pointer-events: none; text-shadow: 0 1px 8px var(--bg); }
+.an-headcam { position: absolute; right: 10px; top: 10px; background: color-mix(in srgb, var(--bg) 80%, transparent); }
+.an-headcam[aria-pressed="true"] { border-color: var(--accent-fill); color: var(--accent); }
 .an-zoom { position: absolute; right: 10px; bottom: 10px; display: grid; gap: 6px; }
 .an-zoom .icon-btn { background: color-mix(in srgb, var(--bg) 80%, transparent); font-size: 18px; line-height: 1; }
 .an-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }

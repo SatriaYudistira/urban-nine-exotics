@@ -72,11 +72,14 @@ the English text is shown. Gene and morph names are never translated.
 
 `#/animation` shows an animated 3D ball python. Visitors pick genes (22 common MorphMarket genes:
 recessive, incomplete dominant with a Super option, and dominant) or a popular combo, and see the
-snake as a hatchling, juvenile or adult, or all three side by side against a ruler. Combos are
+snake as a hatchling, juvenile or adult, or all three side by side against a ruler. The snake can
+**Move** (a slow creeping crawl), **Stay** (resting coil, lifting its head now and then) or
+**Ball up** (the defensive ball with the head tucked in), and **Head close-up** follows the head. Combos are
 shareable: the genes are kept in the link, e.g. `#/animation/banana+clown+pied` or
 `#/animation/super-pastel+clown`.
 
-- The snake and its skin are generated in code (no 3D model files). It is an illustration of
+- The snake and its skin are generated in code (no 3D model files), modelled on reference photos:
+  head shape and markings, rimmed blotches, scale relief and real-world girth per age. It is an illustration of
   typical animals, not a photo, and the page says so.
 - Three.js 0.169 is loaded from jsDelivr only when the page is opened, so other pages stay light.
   Without WebGL the flat skin pattern still works.
