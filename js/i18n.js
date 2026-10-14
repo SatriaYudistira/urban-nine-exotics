@@ -11,7 +11,7 @@ window.UNEi18n = (() => {
       'theme': 'Switch colour theme',
       'lang.switch': 'Baca dalam Bahasa Indonesia',
       'nav.available': 'Available', 'nav.collection': 'Collection', 'nav.projects': 'Projects',
-      'nav.research': 'Research', 'nav.about': 'About', 'nav.contact': 'Contact',
+      'nav.research': 'Research', 'nav.animation': 'Animation', 'nav.about': 'About', 'nav.contact': 'Contact',
       'tab.available': 'Available', 'tab.collection': 'Collection', 'tab.sold': 'Sold', 'tabs': 'Animal lists',
       'search.label': 'Search by gene or ID', 'search.ph': 'Search genes, e.g. clown, het pied',
       'sex': 'Sex', 'sex.all': 'All', 'sex.F': 'Female', 'sex.M': 'Male', 'sex.U': 'Unsexed',
@@ -52,6 +52,7 @@ window.UNEi18n = (() => {
       'ps.planned': 'Planned', 'ps.paired': 'Paired', 'ps.ovulated': 'Ovulated', 'ps.gravid': 'Gravid',
       'ps.laid': 'Eggs laid', 'ps.hatched': 'Hatched', 'paired.with': 'paired with',
       'title.research': 'Ball python care and breeding',
+      'title.animation': 'Ball python morph animation',
       'alt.about': 'A piebald ball python', 'photo': 'Photo'
     },
     id: {
@@ -59,7 +60,7 @@ window.UNEi18n = (() => {
       'theme': 'Ganti tema warna',
       'lang.switch': 'Read in English',
       'nav.available': 'Tersedia', 'nav.collection': 'Koleksi', 'nav.projects': 'Proyek',
-      'nav.research': 'Panduan', 'nav.about': 'Tentang', 'nav.contact': 'Kontak',
+      'nav.research': 'Panduan', 'nav.animation': 'Animasi', 'nav.about': 'Tentang', 'nav.contact': 'Kontak',
       'tab.available': 'Tersedia', 'tab.collection': 'Koleksi', 'tab.sold': 'Terjual', 'tabs': 'Daftar hewan',
       'search.label': 'Cari berdasarkan gen atau ID', 'search.ph': 'Cari gen, misalnya clown, het pied',
       'sex': 'Jenis kelamin', 'sex.all': 'Semua', 'sex.F': 'Betina', 'sex.M': 'Jantan', 'sex.U': 'Belum diketahui',
@@ -100,6 +101,7 @@ window.UNEi18n = (() => {
       'ps.planned': 'Rencana', 'ps.paired': 'Sudah dipasangkan', 'ps.ovulated': 'Ovulasi', 'ps.gravid': 'Gravid',
       'ps.laid': 'Sudah bertelur', 'ps.hatched': 'Menetas', 'paired.with': 'dipasangkan dengan',
       'title.research': 'Panduan perawatan & breeding ball python',
+      'title.animation': 'Animasi morph ball python',
       'alt.about': 'Ball python piebald', 'photo': 'Foto'
     }
   };
